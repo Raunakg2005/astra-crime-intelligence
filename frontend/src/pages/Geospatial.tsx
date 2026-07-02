@@ -21,6 +21,9 @@ const STYLE: maplibregl.StyleSpecification = {
   layers: [{ id: "carto", type: "raster", source: "carto" }],
 };
 
+// Karnataka bounding box [west, south, east, north]
+const KA_BOUNDS: [number, number, number, number] = [73.6, 11.4, 78.7, 18.6];
+
 type Mode = "districts" | "hotspots";
 
 export default function Geospatial() {
@@ -43,14 +46,31 @@ export default function Geospatial() {
     const m = new maplibregl.Map({
       container: mapEl.current,
       style: STYLE,
-      center: [76.5, 15.0],
-      zoom: 6.1,
+      center: [76.2, 15.0],
+      zoom: 6,
       attributionControl: false,
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-    m.on("load", () => setReady(true));
+
+    const fitKA = () => {
+      m.resize();
+      m.fitBounds(KA_BOUNDS, { padding: 24, duration: 0 });
+    };
+    m.on("load", () => {
+      setReady(true);
+      fitKA();
+      // one more fit on the next frame, after the container's final layout settles
+      requestAnimationFrame(fitKA);
+      setTimeout(fitKA, 250);
+    });
     map.current = m;
+
+    // keep canvas sized to its responsive container (no re-fit → respects user zoom)
+    const ro = new ResizeObserver(() => m.resize());
+    ro.observe(mapEl.current);
+
     return () => {
+      ro.disconnect();
       m.remove();
       map.current = null;
     };
@@ -141,7 +161,7 @@ export default function Geospatial() {
           right={
             <div className="flex gap-2">
               <button
-                onClick={() => { setMode("districts"); setSelected(null); map.current?.flyTo({ center: [76.5, 15], zoom: 6.1 }); }}
+                onClick={() => { setMode("districts"); setSelected(null); map.current?.fitBounds(KA_BOUNDS, { padding: 30, duration: 800 }); }}
                 className={`chip ${mode === "districts" ? "!border-accent !text-accent" : ""}`}
               >
                 <Building2 className="h-3.5 w-3.5" /> Districts
@@ -157,9 +177,9 @@ export default function Geospatial() {
         />
       </div>
 
-      <div className="flex-1 flex gap-4 px-6 md:px-8 pb-6 min-h-0">
-        {/* map */}
-        <div className="flex-1 card overflow-hidden relative min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-4 px-6 md:px-8 pb-6">
+        {/* map — explicit height so MapLibre fitBounds has a real box to fit into */}
+        <div className="card overflow-hidden relative h-[64vh]">
           <div ref={mapEl} className="absolute inset-0" />
           {loading && (
             <div className="absolute top-3 left-3 chip bg-ink-900/80 z-10">
@@ -189,7 +209,7 @@ export default function Geospatial() {
         </div>
 
         {/* right panel */}
-        <div className="w-80 shrink-0 flex flex-col gap-4 min-h-0">
+        <div className="flex flex-col gap-4 min-h-0 h-[64vh]">
           {mode === "hotspots" && (
             <div className="card card-pad">
               <div className="flex items-center gap-2 stat-label mb-2">
