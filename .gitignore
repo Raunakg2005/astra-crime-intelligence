@@ -27,3 +27,9 @@ catalyst-cli-token*
 Thumbs.db
 .idea/
 .vscode/
+
+# tsc -b build artifacts
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/*.tsbuildinfo
+frontend/**/*.tsbuildinfo
