@@ -356,11 +356,13 @@ def generate(num_cases: int, seed: int, outdir: str):
         unit_id = rng.choice(units_by_district[did])
         io_id = rng.choice(employees_by_unit[unit_id])
 
-        # --- location: cluster near a hotspot for property/night crimes ---
+        # --- location: ~68% of incidents cluster tightly (~280m) around a district
+        # hotspot centre; the rest scatter across the district. Tight clusters make
+        # DBSCAN hotspots crisp and actionable instead of one city-wide blob.
         d_lat, d_lng, d_span = district_lookup[did][2], district_lookup[did][3], district_lookup[did][4]
-        if rng.random() < 0.6:
+        if rng.random() < 0.68:
             hc = rng.choice(hotspots[did])
-            lat, lng = jitter_point(rng, hc[0], hc[1], d_span * 0.08)
+            lat, lng = jitter_point(rng, hc[0], hc[1], 0.0025)   # ~280m std, fixed
         else:
             lat, lng = jitter_point(rng, d_lat, d_lng, d_span * 0.5)
 
