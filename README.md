@@ -66,10 +66,22 @@ docs/              architecture, data dictionary, pitch
 
 - [x] **Data layer** — schema-conformant generator (27 tables), 12k cases, planted
       hotspot/network/trend/anomaly signal, SQLite build, validated intelligence queries
-- [ ] Analytics/ML service (hotspots, network, forecast, anomaly)
-- [ ] Serverless API + Gateway
-- [ ] React dashboard (geospatial, network, predictive, copilot)
-- [ ] Catalyst deploy + CI/CD + auth + alerts
+- [x] **Analytics/ML service** — DBSCAN hotspots, z-score trend alerts, Louvain
+      communities, ego networks, repeat-offender profiles, IsolationForest anomalies,
+      district risk scoring, temporal patterns (FastAPI)
+- [x] **React dashboard** — Overview, Geospatial (MapLibre), Link Analysis (Cytoscape),
+      Predictive AI; command-center UI wired to live API, builds clean, no console errors
+- [ ] AI copilot (QuickML LLM serving + RAG) + PDF reports (SmartBrowz)
+- [ ] Catalyst deploy config + CI/CD + auth + alerts
+
+## Run it locally (two terminals)
+
+```bash
+# 1. analytics API
+cd backend/appsail_ml && python -m uvicorn app:app --port 8000
+# 2. dashboard (proxies /api -> :8000)
+cd frontend && npm install && npm run dev   # http://localhost:5173
+```
 
 ## Run the data layer
 

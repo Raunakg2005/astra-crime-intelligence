@@ -1,0 +1,182 @@
+import axios from "axios";
+
+const http = axios.create({ baseURL: "" });
+
+// ---- response types (mirror backend/appsail_ml/analytics.py) ----
+export interface Kpis {
+  total_cases: number;
+  cases_last_30d: number;
+  cases_prev_30d: number;
+  mom_change_pct: number;
+  clearance_rate_pct: number;
+  heinous_cases: number;
+  districts: number;
+  active_alerts: number;
+  data_from: string;
+  data_to: string;
+}
+
+export interface District {
+  district_id: number;
+  district: string;
+  lat: number;
+  lng: number;
+  total_cases: number;
+  recent_90d: number;
+  clearance_pct: number;
+  heinous: number;
+  heinous_pct: number;
+  top_crime_head: string;
+}
+
+export interface Cluster {
+  cluster_id: number;
+  lat: number;
+  lng: number;
+  count: number;
+  district: string;
+  dominant_crime: string;
+  dominant_head: string;
+  peak_hour: number | null;
+  night_share_pct: number;
+  heinous_pct: number;
+  intensity: number;
+}
+export interface Hotspots {
+  clusters: Cluster[];
+  n_points: number;
+  n_clustered: number;
+  n_clusters: number;
+}
+
+export interface Alert {
+  district_id: number;
+  district: string;
+  crime_head: string;
+  recent_count: number;
+  baseline_avg: number;
+  z_score: number;
+  ratio: number | null;
+  top_subcrime: string;
+  severity: "critical" | "high" | "elevated";
+}
+
+export interface Offender {
+  name: string;
+  cases: number;
+  districts: number;
+  district_names: string[];
+  primary_mo: string;
+  mo_breakdown: Record<string, number>;
+  age: number;
+}
+
+export interface Community {
+  community_id: number;
+  size: number;
+  members: string[];
+  total_cases: number;
+  districts_spanned: number;
+  districts: string[];
+  dominant_mo: string;
+  internal_edges: number;
+}
+export interface Communities {
+  communities: Community[];
+  n_nodes: number;
+  n_edges: number;
+  n_communities: number;
+}
+
+export interface EgoNode {
+  id: string;
+  type: "offender" | "district";
+  kind: string;
+  cases: number;
+  shared_cases?: number;
+}
+export interface EgoEdge {
+  source: string;
+  target: string;
+  weight: number;
+  label: string;
+}
+export interface Ego {
+  ego: string;
+  profile: {
+    total_cases: number;
+    districts: number;
+    co_offenders: number;
+    primary_mo: string;
+    mo_breakdown: Record<string, number>;
+  };
+  nodes: EgoNode[];
+  edges: EgoEdge[];
+}
+
+export interface Anomaly {
+  case_id: number;
+  crime_no: string;
+  district: string;
+  crime: string;
+  date: string;
+  score: number;
+  reasons: string[];
+}
+export interface AnomalyResp {
+  anomalies: Anomaly[];
+  n_flagged: number;
+  total_cases: number;
+}
+
+export interface RiskDistrict {
+  district_id: number;
+  district: string;
+  lat: number;
+  lng: number;
+  risk_score: number;
+  recent_30d: number;
+  trend_pct: number;
+  heinous_share_pct: number;
+  risk_band: "High" | "Medium" | "Low";
+}
+
+export interface TimeSeries {
+  monthly: { month: string; count: number }[];
+  dow_hour: { dow: number; hour: number; count: number }[];
+  by_head: Record<string, number>;
+}
+
+// ---- api calls ----
+export const api = {
+  kpis: () => http.get<Kpis>("/api/kpis").then((r) => r.data),
+  districts: () => http.get<District[]>("/api/districts").then((r) => r.data),
+  hotspots: (p: { district_id?: number; crime_head?: string; days?: number } = {}) =>
+    http.get<Hotspots>("/api/hotspots", { params: p }).then((r) => r.data),
+  trends: (z = 2) =>
+    http.get<{ alerts: Alert[] }>("/api/trends", { params: { z_threshold: z } }).then((r) => r.data.alerts),
+  timeseries: (p: { crime_head?: string; district_id?: number } = {}) =>
+    http.get<TimeSeries>("/api/timeseries", { params: p }).then((r) => r.data),
+  communities: (top = 15) =>
+    http.get<Communities>("/api/network/communities", { params: { top } }).then((r) => r.data),
+  repeatOffenders: (min_cases = 5, top = 25) =>
+    http
+      .get<{ offenders: Offender[] }>("/api/network/repeat-offenders", { params: { min_cases, top } })
+      .then((r) => r.data.offenders),
+  ego: (name: string) => http.get<Ego>(`/api/network/ego/${encodeURIComponent(name)}`).then((r) => r.data),
+  anomalies: (top = 30) => http.get<AnomalyResp>("/api/anomalies", { params: { top } }).then((r) => r.data),
+  risk: () => http.get<{ districts: RiskDistrict[] }>("/api/risk").then((r) => r.data.districts),
+};
+
+// crime-head -> colour (consistent across views)
+export const HEAD_COLORS: Record<string, string> = {
+  "Crimes Against Body": "#f43f5e",
+  "Crimes Against Property": "#38bdf8",
+  "Crimes Against Women": "#a78bfa",
+  "Crimes Against Children": "#f472b6",
+  "Crimes Against Public Order & Safety": "#fbbf24",
+  "Economic Offences": "#34d399",
+  "Offences Against State / Special Laws": "#fb923c",
+  "Cyber Crimes": "#22d3ee",
+};
+export const headColor = (h: string) => HEAD_COLORS[h] ?? "#94a3b8";

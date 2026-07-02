@@ -1,0 +1,75 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  @apply bg-ink-950 text-slate-200 font-sans antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 15% -10%, rgba(56, 189, 248, 0.08), transparent),
+    radial-gradient(1000px 500px at 100% 0%, rgba(167, 139, 250, 0.06), transparent);
+}
+
+/* scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-ink-600 rounded-full;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .card {
+    @apply bg-ink-850/70 border border-ink-700 rounded-2xl backdrop-blur-sm;
+  }
+  .card-pad {
+    @apply p-5;
+  }
+  .stat-label {
+    @apply text-[11px] uppercase tracking-wider text-slate-400 font-medium;
+  }
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400
+           hover:text-slate-100 hover:bg-ink-700/50 transition-colors;
+  }
+  .nav-item-active {
+    @apply text-white bg-accent/10 border border-accent/30 hover:bg-accent/15;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium
+           bg-ink-700/60 border border-ink-600 text-slate-300;
+  }
+}
+
+/* MapLibre popup theming */
+.maplibregl-popup-content {
+  @apply bg-ink-800 text-slate-200 border border-ink-600 rounded-xl shadow-2xl text-xs;
+  padding: 10px 12px;
+}
+.maplibregl-popup-tip {
+  border-top-color: #131c30 !important;
+  border-bottom-color: #131c30 !important;
+}
+.maplibregl-ctrl-group {
+  @apply bg-ink-800 border border-ink-600;
+}
