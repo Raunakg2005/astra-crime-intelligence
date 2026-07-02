@@ -1,0 +1,29 @@
+# Generated data (regenerate with: python data/generator/generate.py)
+data/out/
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+.vite/
+
+# Env / secrets
+.env
+.env.local
+*.local
+catalyst-cli-token*
+.catalystrc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
