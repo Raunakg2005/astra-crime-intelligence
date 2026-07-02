@@ -1,0 +1,46 @@
+{
+  "risk": {
+    "classifier": {
+      "roc_auc": 0.657,
+      "accuracy": 0.624,
+      "precision": 0.588,
+      "recall": 0.137,
+      "f1": 0.222,
+      "positive_rate_test": 0.392
+    },
+    "regressor": {
+      "mae": 1.781,
+      "baseline_mae_lag1": 2.051,
+      "r2": 0.557
+    },
+    "n_train_rows": 2852,
+    "n_test_rows": 930,
+    "feature_importance": {
+      "district_base": 0.384,
+      "roll8_mean": 0.099,
+      "roll4_std": 0.097,
+      "roll4_mean": 0.087,
+      "lag1": 0.079,
+      "month_cos": 0.054,
+      "clear_rate_lag1": 0.052,
+      "month_sin": 0.043,
+      "lag2": 0.034,
+      "lag4": 0.034,
+      "lag3": 0.027,
+      "heinous_lag1": 0.011
+    }
+  },
+  "anomaly": {
+    "n_cases": 12000,
+    "features": [
+      "hour",
+      "GravityOffenceID",
+      "n_accused",
+      "report_delay_h",
+      "subhead_rarity",
+      "heinous"
+    ],
+    "flagged": 120
+  },
+  "data_rows": 12000
+}

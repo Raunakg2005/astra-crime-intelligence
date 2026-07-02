@@ -280,6 +280,36 @@ def generate(num_cases: int, seed: int, outdir: str):
     SPIKE_SUBHEAD = 206
     SPIKE_WINDOW_START = END - timedelta(days=45)
 
+    # ---- spatiotemporal intensity field over (district, week) --------------
+    # Real crime volume has structure: per-district trends (some rising, some
+    # falling), yearly seasonality, and week-to-week MOMENTUM (autocorrelation).
+    # We build an intensity per (district, week) from base rate x trend x seasonal
+    # x an AR(1) momentum process, then sample each case's (district, week) from it.
+    # This makes next-week volume genuinely predictable (so the ML models learn a
+    # real signal) instead of white noise.
+    n_weeks = total_days // 7 + 1
+    cells = []          # (district_id, week_index)
+    cell_weights = []
+    for did, dname, dlat, dlng, dspan, base_w in ref.DISTRICTS:
+        slope = rng.gauss(0.0, 0.5)          # long-run trend (rising/falling)
+        phase = rng.uniform(0, 2 * math.pi)  # seasonal phase
+        ar = 0.0
+        for wk in range(n_weeks):
+            ar = 0.75 * ar + rng.gauss(0, 0.35)       # AR(1) momentum
+            month = (START + timedelta(days=wk * 7)).month
+            seasonal = 1 + 0.22 * math.sin(2 * math.pi * month / 12 + phase)
+            if month in (3, 4, 10):                    # mild festival/summer bumps
+                seasonal *= 1.12
+            trend = max(0.2, 1 + slope * (wk / n_weeks))
+            intensity = base_w * trend * seasonal * math.exp(ar)
+            # planted Bengaluru spike: raise volume in the last ~6 weeks
+            if did == SPIKE_DISTRICT and (START + timedelta(days=wk * 7)) >= SPIKE_WINDOW_START - timedelta(days=7):
+                intensity *= 1.7
+            cells.append((did, wk))
+            cell_weights.append(max(0.01, intensity))
+    # pre-sample every case's (district, week) from the intensity field in one pass
+    case_cells = rng.choices(range(len(cells)), weights=cell_weights, k=num_cases)
+
     # per-(unit, category, year) running serials for CrimeNo
     serials = {}
 
@@ -322,12 +352,11 @@ def generate(num_cases: int, seed: int, outdir: str):
     anomalies_made = 0
 
     for case_i in range(1, num_cases + 1):
-        # --- choose district (weighted by urbanisation) ---
-        did = weighted_choice(rng, district_ids, district_weights)
-
-        # --- choose date (uniform, but bias recent months slightly upward) ---
-        day_offset = int(total_days * (rng.random() ** 0.85))
-        reg_date = START + timedelta(days=day_offset)
+        # --- district + week drawn from the spatiotemporal intensity field ---
+        did, wk = cells[case_cells[case_i - 1]]
+        reg_date = START + timedelta(days=wk * 7 + rng.randint(0, 6))
+        if reg_date > END:
+            reg_date = END
 
         # --- choose crime sub-head ---
         subhead = weighted_choice(rng, subhead_ids, subhead_weights)

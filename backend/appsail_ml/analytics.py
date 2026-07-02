@@ -13,13 +13,28 @@ Everything returns plain JSON-serialisable dicts for the API layer.
 """
 from __future__ import annotations
 
+import functools
 import math
+import os
 from datetime import timedelta
 
 import numpy as np
 import pandas as pd
 
 import db
+
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
+
+
+@functools.lru_cache(maxsize=8)
+def _load_model(name: str):
+    """Load a persisted model artefact (trained by train.py). Returns None if the
+    pipeline hasn't been run yet, so inference falls back to on-the-fly computation."""
+    path = os.path.join(MODELS_DIR, name)
+    if not os.path.exists(path):
+        return None
+    import joblib
+    return joblib.load(path)
 
 # reference district centroids (kept here so the service is self-contained)
 DISTRICT_CENTROIDS = {
@@ -325,8 +340,6 @@ def ego_network(name, depth=1):
 # ---------------------------------------------------------------------------
 
 def anomalies(contamination=0.01, top=30):
-    from sklearn.ensemble import IsolationForest
-
     df = db.load_cases().copy()
     df["report_delay_h"] = df["report_delay_h"].clip(lower=0).fillna(0)
     # per-case accused/victim counts
@@ -341,8 +354,15 @@ def anomalies(contamination=0.01, top=30):
 
     feats = df[["hour", "GravityOffenceID", "n_accused", "report_delay_h",
                 "subhead_rarity", "heinous"]].fillna(0)
-    model = IsolationForest(contamination=contamination, random_state=42, n_estimators=200)
-    df["anom_score"] = -model.fit(feats).score_samples(feats)  # higher = more anomalous
+    # prefer the PERSISTED trained model (train.py); fall back to fitting on the fly
+    art = _load_model("anomaly_model.joblib")
+    if art is not None:
+        model = art["model"]
+        feats = df[art["features"]].fillna(0)
+    else:
+        from sklearn.ensemble import IsolationForest
+        model = IsolationForest(contamination=contamination, random_state=42, n_estimators=200).fit(feats)
+    df["anom_score"] = -model.score_samples(feats)      # higher = more anomalous
     df["is_anom"] = model.predict(feats) == -1
 
     flagged = df[df["is_anom"]].nlargest(top, "anom_score")
@@ -376,9 +396,59 @@ def anomalies(contamination=0.01, top=30):
 # Predictive risk scoring (Zia AutoML proxy)
 # ---------------------------------------------------------------------------
 
+def _risk_scores_trained():
+    """Forecast-based risk scoring using persisted models. Returns None if unavailable."""
+    reg_art = _load_model("risk_regressor.joblib")
+    clf_art = _load_model("risk_classifier.joblib")
+    if reg_art is None or clf_art is None:
+        return None
+    import train  # build_panel / latest_features / RISK_FEATURES
+
+    latest = train.latest_features()
+    if latest.empty:
+        return None
+    X = latest[reg_art["features"]]
+    pred_count = np.clip(reg_art["model"].predict(X), 0, None)
+    hi_prob = clf_art["model"].predict_proba(latest[clf_art["features"]])[:, 1]
+
+    pc_norm = (pred_count - pred_count.min()) / (pred_count.max() - pred_count.min() + 1e-9)
+    df = db.load_cases()
+    latest2 = _latest(df)
+    r30 = df[df["RegDate"] > latest2 - timedelta(days=30)].groupby("DistrictID").size()
+    heinous = df.groupby("DistrictID")["heinous"].mean()
+
+    out = []
+    for i, (_, row) in enumerate(latest.iterrows()):
+        did = int(row["DistrictID"])
+        score = 100 * (0.6 * float(hi_prob[i]) + 0.4 * float(pc_norm[i]))
+        lat, lng = DISTRICT_CENTROIDS.get(did, (None, None))
+        out.append({
+            "district_id": did,
+            "district": row["DistrictName"],
+            "lat": lat, "lng": lng,
+            "risk_score": round(score, 1),
+            "predicted_next_week": int(round(float(pred_count[i]))),
+            "high_risk_probability": round(float(hi_prob[i]), 3),
+            "recent_30d": int(r30.get(did, 0)),
+            "trend_pct": round(float((row["lag1"] - row["roll4_mean"]) / (row["roll4_mean"] + 1) * 100), 1),
+            "heinous_share_pct": round(float(heinous.get(did, 0)) * 100, 1),
+            "risk_band": "High" if score >= 60 else ("Medium" if score >= 35 else "Low"),
+            "model": "GradientBoosting (trained)",
+        })
+    return sorted(out, key=lambda r: -r["risk_score"])
+
+
 def risk_scores():
-    """District risk = blend of recent volume, upward trend, and heinous share.
-    Local proxy for a Catalyst Zia AutoML tabular model; same feature semantics."""
+    """Predictive district risk.
+
+    Uses the TRAINED models (train.py) when available: a GradientBoosting regressor
+    forecasts next-week FIR count and a classifier gives the high-risk probability per
+    district, combined into a 0-100 score. Falls back to a transparent heuristic blend
+    (recent volume + trend + heinous share) if models aren't present yet.
+    On Catalyst this is served by Zia AutoML."""
+    trained = _risk_scores_trained()
+    if trained is not None:
+        return trained
     df = db.load_cases()
     latest = _latest(df)
     r30 = df[df["RegDate"] > latest - timedelta(days=30)].groupby("DistrictID").size()

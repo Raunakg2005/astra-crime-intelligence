@@ -69,6 +69,10 @@ docs/              architecture, data dictionary, pitch
 - [x] **Analytics/ML service** — DBSCAN hotspots, z-score trend alerts, Louvain
       communities, ego networks, repeat-offender profiles, IsolationForest anomalies,
       district risk scoring, temporal patterns (FastAPI)
+- [x] **Trained ML + MLOps** — `train.py` pipeline: GradientBoosting high-risk classifier
+      (ROC-AUC 0.66) + next-week count regressor (MAE beats naive baseline, R² 0.56) with
+      a **temporal train/test split**, persisted `.joblib` artefacts + `metrics.json`,
+      served loaded at inference; model card surfaced in the UI
 - [x] **React dashboard** — Overview, Geospatial (MapLibre), Link Analysis (Cytoscape),
       Predictive AI; command-center UI wired to live API, builds clean, no console errors
 - [ ] AI copilot (QuickML LLM serving + RAG) + PDF reports (SmartBrowz)
@@ -77,10 +81,14 @@ docs/              architecture, data dictionary, pitch
 ## Run it locally (two terminals)
 
 ```bash
+# 0. data + trained models (one-time / after data changes)
+cd data && python generator/generate.py --cases 12000 && python build_sqlite.py
+cd ../backend/appsail_ml && pip install -r ../../requirements.txt && python train.py
+
 # 1. analytics API
-cd backend/appsail_ml && python -m uvicorn app:app --port 8000
+python -m uvicorn app:app --port 8000
 # 2. dashboard (proxies /api -> :8000)
-cd frontend && npm install && npm run dev   # http://localhost:5173
+cd ../../frontend && npm install && npm run dev   # http://localhost:5173
 ```
 
 ## Run the data layer

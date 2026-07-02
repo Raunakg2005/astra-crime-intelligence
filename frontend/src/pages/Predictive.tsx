@@ -10,8 +10,8 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
-import { Brain, AlertOctagon, Gauge, Sparkles } from "lucide-react";
-import { api, Anomaly, RiskDistrict } from "../api";
+import { AlertOctagon, Gauge, Sparkles, Cpu } from "lucide-react";
+import { api, Anomaly, ModelInfo, RiskDistrict } from "../api";
 import { PageHeader, Spinner, SeverityBadge, Section } from "../components/ui";
 
 const bandColor = (b: string) => (b === "High" ? "#f43f5e" : b === "Medium" ? "#fbbf24" : "#34d399");
@@ -20,9 +20,11 @@ export default function Predictive() {
   const [risk, setRisk] = useState<RiskDistrict[]>([]);
   const [anoms, setAnoms] = useState<Anomaly[]>([]);
   const [flagged, setFlagged] = useState<{ n: number; total: number }>();
+  const [model, setModel] = useState<ModelInfo>();
 
   useEffect(() => {
     api.risk().then(setRisk);
+    api.modelInfo().then(setModel);
     api.anomalies(30).then((a) => {
       setAnoms(a.anomalies);
       setFlagged({ n: a.n_flagged, total: a.total_cases });
@@ -53,6 +55,27 @@ export default function Predictive() {
           )
         }
       />
+
+      {/* model card — MLOps transparency */}
+      {model?.risk && (
+        <div className="card card-pad mb-5 animate-fadeUp">
+          <div className="flex items-center gap-2 mb-3">
+            <Cpu className="h-4 w-4 text-accent-green" />
+            <span className="text-sm font-semibold text-slate-200">Model card</span>
+            <span className="chip !py-0.5 ml-1">GradientBoosting · temporal split</span>
+            <span className="text-[11px] text-slate-500 ml-auto">
+              {model.risk.n_train_rows.toLocaleString()} train / {model.risk.n_test_rows.toLocaleString()} test rows
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <Metric label="Risk ROC-AUC" value={model.risk.classifier.roc_auc} good />
+            <Metric label="Precision" value={model.risk.classifier.precision} />
+            <Metric label="Forecast MAE" value={model.risk.regressor.mae} sub={`vs ${model.risk.regressor.baseline_mae_lag1} baseline`} good />
+            <Metric label="Forecast R²" value={model.risk.regressor.r2} good />
+            <Metric label="Anomalies" value={model.anomaly?.flagged ?? "—"} sub={`/ ${model.anomaly?.n_cases?.toLocaleString() ?? ""}`} />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* risk scatter */}
@@ -108,6 +131,11 @@ export default function Predictive() {
                 <div className="flex-1 h-2.5 rounded-full bg-ink-700 overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${r.risk_score}%`, background: bandColor(r.risk_band) }} />
                 </div>
+                {r.predicted_next_week !== undefined && (
+                  <span className="w-16 text-right text-[10px] font-mono text-accent-cyan" title="predicted FIRs next week">
+                    ~{r.predicted_next_week}/wk
+                  </span>
+                )}
                 <span className="w-9 text-right text-xs font-mono text-white">{r.risk_score}</span>
                 <SeverityBadge severity={r.risk_band} />
               </div>
@@ -142,6 +170,16 @@ export default function Predictive() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value, sub, good }: { label: string; value: number | string; sub?: string; good?: boolean }) {
+  return (
+    <div className="rounded-xl border border-ink-700 bg-ink-800/40 p-3">
+      <div className="stat-label">{label}</div>
+      <div className={`text-xl font-bold tabular-nums mt-1 ${good ? "text-accent-green" : "text-white"}`}>{value}</div>
+      {sub && <div className="text-[10px] text-slate-500 mt-0.5">{sub}</div>}
     </div>
   );
 }

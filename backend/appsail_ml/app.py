@@ -10,6 +10,9 @@ Catalyst Cron job (precompute.py) materialises hotspots/trends/risk into Catalys
 """
 from __future__ import annotations
 
+import json
+import os
+
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -98,8 +101,18 @@ def get_anomalies(contamination: float = Query(0.01), top: int = Query(30)):
 
 @app.get("/api/risk", tags=["ai"])
 def get_risk():
-    """Predictive district risk scores (Zia AutoML proxy)."""
+    """Predictive district risk scores (trained GradientBoosting / Zia AutoML)."""
     return {"districts": A.risk_scores()}
+
+
+@app.get("/api/model-info", tags=["ai"])
+def get_model_info():
+    """Training metrics for the persisted models (from train.py -> metrics.json)."""
+    path = os.path.join(os.path.dirname(__file__), "models", "metrics.json")
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return {"trained": False, "message": "run train.py to train models"}
 
 
 @app.get("/", tags=["overview"])

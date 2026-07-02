@@ -139,6 +139,21 @@ export interface RiskDistrict {
   trend_pct: number;
   heinous_share_pct: number;
   risk_band: "High" | "Medium" | "Low";
+  predicted_next_week?: number;
+  high_risk_probability?: number;
+  model?: string;
+}
+
+export interface ModelInfo {
+  trained?: boolean;
+  risk?: {
+    classifier: { roc_auc: number; f1: number; precision: number; recall: number; accuracy: number };
+    regressor: { mae: number; baseline_mae_lag1: number; r2: number };
+    n_train_rows: number;
+    n_test_rows: number;
+    feature_importance: Record<string, number>;
+  };
+  anomaly?: { n_cases: number; flagged: number };
 }
 
 export interface TimeSeries {
@@ -166,6 +181,7 @@ export const api = {
   ego: (name: string) => http.get<Ego>(`/api/network/ego/${encodeURIComponent(name)}`).then((r) => r.data),
   anomalies: (top = 30) => http.get<AnomalyResp>("/api/anomalies", { params: { top } }).then((r) => r.data),
   risk: () => http.get<{ districts: RiskDistrict[] }>("/api/risk").then((r) => r.data.districts),
+  modelInfo: () => http.get<ModelInfo>("/api/model-info").then((r) => r.data),
 };
 
 // crime-head -> colour (consistent across views)

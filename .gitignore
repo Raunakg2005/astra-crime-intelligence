@@ -33,3 +33,6 @@ frontend/vite.config.js
 frontend/vite.config.d.ts
 frontend/*.tsbuildinfo
 frontend/**/*.tsbuildinfo
+
+# trained model binaries (regenerate: python backend/appsail_ml/train.py)
+backend/appsail_ml/models/*.joblib
