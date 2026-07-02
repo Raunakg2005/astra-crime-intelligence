@@ -273,7 +273,7 @@ def generate(num_cases: int, seed: int, outdir: str):
 
     # ---- date range & spike config ----------------------------------------
     END = datetime(2026, 6, 30)
-    START = END - timedelta(days=365 * 2 + 180)   # ~2.5 years
+    START = END - timedelta(days=365 * 4)   # 4 years of history (more panel rows for forecasting)
     total_days = (END - START).days
     # emerging-trend spike: Chain Snatching (206) in Bengaluru City in last 45 days
     SPIKE_DISTRICT = 4001
