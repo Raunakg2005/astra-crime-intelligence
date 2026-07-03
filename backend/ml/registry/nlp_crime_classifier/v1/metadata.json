@@ -1,0 +1,156 @@
+{
+  "family": "multinomial_nb",
+  "metrics": {
+    "accuracy": 0.8605,
+    "macro_f1": 0.8785,
+    "weighted_f1": 0.8645,
+    "cv_macro_f1": 0.8793,
+    "n_classes": 8
+  },
+  "cv": {
+    "n_splits": 4,
+    "n_candidates": 10,
+    "metric": "f1_macro",
+    "mean": 0.8793,
+    "std": 0.0026,
+    "leaderboard": [
+      {
+        "family": "multinomial_nb",
+        "cv_score": 0.8793,
+        "cv_std": 0.0026
+      },
+      {
+        "family": "ridge",
+        "cv_score": 0.8731,
+        "cv_std": 0.0031
+      },
+      {
+        "family": "logreg",
+        "cv_score": 0.87,
+        "cv_std": 0.0028
+      },
+      {
+        "family": "sgd_logloss",
+        "cv_score": 0.865,
+        "cv_std": 0.0035
+      },
+      {
+        "family": "linear_svc",
+        "cv_score": 0.8626,
+        "cv_std": 0.003
+      },
+      {
+        "family": "random_forest",
+        "cv_score": 0.8436,
+        "cv_std": 0.0034
+      },
+      {
+        "family": "extra_trees",
+        "cv_score": 0.8422,
+        "cv_std": 0.0023
+      },
+      {
+        "family": "complement_nb",
+        "cv_score": 0.8385,
+        "cv_std": 0.0044
+      },
+      {
+        "family": "xgboost",
+        "cv_score": 0.8357,
+        "cv_std": 0.0032
+      },
+      {
+        "family": "passive_aggressive",
+        "cv_score": 0.8312,
+        "cv_std": 0.0096
+      }
+    ]
+  },
+  "data": {
+    "n_cases": 40000,
+    "n_districts": 31,
+    "date_from": "2022-07-01",
+    "date_to": "2026-06-30",
+    "span_days": 1460,
+    "warnings": [],
+    "data_fingerprint": "d9c60dedd4f21558"
+  },
+  "per_class": {
+    "Crimes Against Body": {
+      "precision": 0.9710669077757685,
+      "recall": 0.7979197622585439,
+      "f1-score": 0.8760195758564437,
+      "support": 1346.0
+    },
+    "Crimes Against Children": {
+      "precision": 1.0,
+      "recall": 0.8188405797101449,
+      "f1-score": 0.900398406374502,
+      "support": 138.0
+    },
+    "Crimes Against Property": {
+      "precision": 0.7039365773646802,
+      "recall": 0.9942084942084942,
+      "f1-score": 0.8242637644046095,
+      "support": 2590.0
+    },
+    "Crimes Against Public Order & Safety": {
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1-score": 0.8888888888888888,
+      "support": 795.0
+    },
+    "Crimes Against Women": {
+      "precision": 0.9987325728770595,
+      "recall": 0.7895791583166333,
+      "f1-score": 0.8819250139899273,
+      "support": 998.0
+    },
+    "Cyber Crimes": {
+      "precision": 1.0,
+      "recall": 0.7860026917900403,
+      "f1-score": 0.880180859080633,
+      "support": 743.0
+    },
+    "Economic Offences": {
+      "precision": 1.0,
+      "recall": 0.8193548387096774,
+      "f1-score": 0.900709219858156,
+      "support": 775.0
+    },
+    "Offences Against State / Special Laws": {
+      "precision": 1.0,
+      "recall": 0.7788617886178861,
+      "f1-score": 0.8756855575868373,
+      "support": 615.0
+    },
+    "macro avg": {
+      "precision": 0.9592170072521886,
+      "recall": 0.8230959142014276,
+      "f1-score": 0.8785089107549997,
+      "support": 8000.0
+    },
+    "weighted avg": {
+      "precision": 0.8991233626215014,
+      "recall": 0.8605,
+      "f1-score": 0.8644523689027367,
+      "support": 8000.0
+    }
+  },
+  "classes": [
+    "Crimes Against Body",
+    "Crimes Against Children",
+    "Crimes Against Property",
+    "Crimes Against Public Order & Safety",
+    "Crimes Against Women",
+    "Cyber Crimes",
+    "Economic Offences",
+    "Offences Against State / Special Laws"
+  ],
+  "n_train": 32000,
+  "n_holdout": 8000,
+  "task": "nlp_crime_classifier",
+  "version": 1,
+  "registered_at": "2026-07-03T06:02:31.218985+00:00",
+  "primary_metric": "macro_f1"
+}

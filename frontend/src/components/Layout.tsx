@@ -5,6 +5,7 @@ import {
   MapPinned,
   Share2,
   Brain,
+  ScanText,
   ShieldCheck,
   Circle,
 } from "lucide-react";
@@ -15,6 +16,7 @@ const NAV = [
   { to: "/geospatial", label: "Geospatial", icon: MapPinned },
   { to: "/network", label: "Link Analysis", icon: Share2 },
   { to: "/predictive", label: "Predictive AI", icon: Brain },
+  { to: "/nlp", label: "NLP Text AI", icon: ScanText },
 ];
 
 export default function Layout() {

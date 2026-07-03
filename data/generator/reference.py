@@ -319,3 +319,115 @@ FIRST_NAMES_F = ["Lakshmi", "Sushma", "Divya", "Anitha", "Kavya", "Priya", "Roop
 LAST_NAMES = ["Gowda", "Reddy", "Shetty", "Naik", "Rao", "Hegde", "Patil", "Kumar",
               "Murthy", "Prasad", "Bhat", "Achar", "Jain", "Kulkarni", "Desai",
               "Hiremath", "Angadi", "Malagi", "Poojary", "Kamath"]
+
+# ---------------------------------------------------------------------------
+# BriefFacts narrative generation (feeds the NLP pipeline).
+#
+# Templates DESCRIBE the incident realistically and NEVER name the crime head /
+# sub-head (no label leakage) — so classifying the crime type from the narrative
+# is a genuine NLP task. Entity slots ({item},{weapon},{vehicle},{value},{pretext},
+# {contraband}) give the entity-extraction demo real targets.
+# ---------------------------------------------------------------------------
+
+NLP_ENTITIES = {
+    "weapon": ["a knife", "a long machete", "an iron rod", "a wooden club", "a sickle",
+               "a country-made pistol", "a broken bottle", "a chopper", "a bamboo stick"],
+    "vehicle": ["a motorcycle", "a scooter", "a white car", "an autorickshaw",
+                "a pickup van", "a black SUV", "a moped"],
+    "item": ["gold ornaments", "a mobile phone", "cash", "a laptop", "silver articles",
+             "a gold chain", "important documents", "a two-wheeler", "a gold mangalsutra",
+             "electronic goods"],
+    "contraband": ["ganja", "MDMA pills", "illicit arrack", "brown sugar",
+                   "banned gutka", "ganja packets", "whitener bottles"],
+    "pretext": ["a fake job offer abroad", "a lottery prize", "a quick loan approval",
+                "a matrimonial alliance", "doubling of invested money",
+                "a fake insurance maturity", "a work-from-home scheme", "a fake KYC update"],
+}
+
+# per-subhead templates (most distinctive crimes)
+BRIEF_SUBHEAD_TEMPLATES = {
+    101: ["Complainant found the deceased lying in a pool of blood with grievous injuries near {place}. The body was shifted for postmortem and investigation taken up.",
+          "The victim was attacked by unidentified persons with {weapon} at {place} and succumbed on the spot.",
+          "A quarrel over money escalated and the accused fatally assaulted the deceased with {weapon} at {place}."],
+    102: ["The accused attacked the complainant with {weapon} intending to kill; the injured was rushed to hospital in critical condition from {place}.",
+          "Assailants ambushed the complainant near {place} and stabbed repeatedly with {weapon} before fleeing."],
+    105: ["Following a heated argument at {place}, the accused assaulted the complainant with {weapon}, causing bleeding injuries.",
+          "The complainant was beaten up by a group over an old rivalry near {place} and sustained injuries."],
+    106: ["The complainant's {relation} was forcibly taken away in {vehicle} by unknown persons from near {place}.",
+          "Unidentified persons abducted the victim near {place} and a ransom demand was later received."],
+    202: ["The accused waylaid the complainant at {place}, brandished {weapon}, and forcibly took away {item} and cash worth Rs {value}.",
+          "Armed miscreants intercepted the complainant near {place}, threatened with {weapon} and decamped with {item}."],
+    203: ["Miscreants broke open the door lock during the night and decamped with {item} and jewellery worth Rs {value} from the house at {place}.",
+          "The complainant returned to find the house lock broken and {item} missing from the premises at {place}."],
+    204: ["The complainant reported that {item} kept at {place} went missing; the lock was found tampered.",
+          "Unknown persons decamped with {item} worth Rs {value} from {place} while the complainant was away."],
+    205: ["The complainant parked {vehicle} at {place}; on return it was found missing and a theft is suspected.",
+          "{vehicle} left near {place} was stolen by unidentified persons during the night."],
+    206: ["Two-wheeler-borne miscreants snatched a gold chain from the complainant near {place} and sped away on {vehicle}.",
+          "While the complainant was walking near {place}, the accused snatched {item} and escaped on {vehicle}."],
+    201: ["An armed gang stormed the premises at {place}, threatened the inmates with {weapon} and looted {item} and cash of Rs {value}."],
+    301: ["The complainant alleged that the accused, known to her, sexually assaulted her at {place} against her will.",
+          "A woman lodged a complaint of sexual assault by the accused at {place}; medical examination was conducted."],
+    303: ["A married woman alleged persistent harassment and cruelty by her husband and in-laws over dowry demands at {place}.",
+          "The complainant stated she was subjected to mental and physical cruelty for additional dowry at her matrimonial home in {place}."],
+    302: ["A young married woman died under suspicious circumstances at {place} within seven years of marriage amid dowry harassment allegations."],
+    304: ["The accused outraged the modesty of the complainant by inappropriate touching at {place} and fled.",
+          "The complainant reported that the accused misbehaved and molested her near {place}."],
+    305: ["The complainant, a woman, reported repeated unwelcome advances and lewd remarks by the accused at {place}."],
+    401: ["A minor was subjected to inappropriate acts by the accused at {place}; the child's guardian lodged the complaint.",
+          "The guardian alleged that the accused sexually abused the minor child near {place}."],
+    501: ["A group indulged in stone-pelting, damaged public property and disrupted peace at {place} following a dispute.",
+          "Two groups clashed at {place}, pelted stones and torched vehicles amid communal tension."],
+    504: ["A speeding {vehicle} driven rashly knocked down the complainant near {place}, causing injuries, and sped off."],
+    601: ["The complainant was induced to part with Rs {value} on the false promise of {pretext}; the accused is now absconding.",
+          "The accused cheated the complainant of Rs {value} by promising {pretext} and issued a bounced cheque."],
+    602: ["Money and valuables entrusted to the accused for safekeeping were dishonestly misappropriated, cheating the complainant of Rs {value}."],
+    603: ["The accused fabricated documents and forged signatures to fraudulently obtain Rs {value} from the complainant."],
+    701: ["During patrolling near {place}, the accused was found in possession of {contraband} and the same was seized.",
+          "Acting on a tip-off, the team intercepted the accused near {place} with {contraband} concealed in {vehicle}."],
+    702: ["The accused was found in unauthorised possession of {weapon} without a valid licence near {place}."],
+    703: ["The accused was caught transporting {contraband} without permit near {place}; stock was seized."],
+    704: ["A group was found gambling and betting money at a common house near {place}; cash and cards were seized."],
+    801: ["The complainant received a fraudulent call and link, shared an OTP, and lost Rs {value} from the bank account.",
+          "On the pretext of {pretext}, the accused obtained online banking credentials and siphoned Rs {value} digitally."],
+    802: ["The complainant reported receiving obscene and threatening messages online from the accused."],
+    803: ["Unknown persons created a fake profile impersonating the complainant and misused personal details online."],
+    804: ["The complainant shared card and OTP details on a fraudulent portal and Rs {value} was debited without consent."],
+}
+
+# per-head fallback templates (guarantee coverage for every sub-head)
+BRIEF_HEAD_TEMPLATES = {
+    1: ["The complainant sustained injuries in an assault by the accused with {weapon} at {place}."],
+    2: ["The complainant reported loss of {item} worth Rs {value} at {place} by unknown persons."],
+    3: ["A woman lodged a complaint of harassment and misbehaviour by the accused at {place}."],
+    4: ["A complaint concerning the safety of a minor child at {place} was lodged by the guardian."],
+    5: ["A disturbance to public peace and order was reported at {place}, requiring police intervention."],
+    6: ["The complainant was defrauded of Rs {value} by the accused through deceitful means related to {pretext}."],
+    7: ["The accused was found violating special-law provisions with {contraband} near {place}."],
+    8: ["The complainant fell victim to an online fraud and lost Rs {value} through a deceptive digital scheme."],
+}
+
+RELATIONS = ["minor son", "daughter", "younger brother", "relative", "employee"]
+
+# Low-signal / vague narratives — real FIR briefs are often uninformative. A share of
+# cases use these regardless of crime type, so the classifier CAN'T be perfect (forces
+# realistic ~85-92% accuracy instead of a suspicious 100%).
+GENERIC_BRIEFS = [
+    "The complainant submitted a written report regarding an incident that occurred at {place}. The matter is under investigation.",
+    "Based on credible information received, a case was registered concerning an offence reported near {place}.",
+    "The complainant approached the station alleging an offence by the accused at {place}; statements are being recorded.",
+    "An incident arising out of a prior dispute between the parties was reported at {place}. Further enquiry is on.",
+    "Police received a complaint about an untoward incident at {place}. Investigation has commenced.",
+    "The complainant lodged a report against the accused over an incident at {place}. Action is being taken as per law.",
+    "A complaint was received regarding an offence committed at {place}; the accused is yet to be identified.",
+]
+
+# Confusable templates shared across related heads (add realistic class-boundary
+# ambiguity so different models genuinely differ on the leaderboard).
+CONFUSABLE_BRIEFS = {
+    # violence + taking property: robbery(2) vs assault(1)
+    2: ["The accused confronted the complainant at {place}, assaulted him with {weapon} and took away {item}."],
+    1: ["During a scuffle at {place}, the accused attacked the complainant with {weapon}; belongings were also lost."],
+    # women vs body: molestation described like assault
+    3: ["The accused caught hold of the complainant at {place} and assaulted her when she resisted."],
+}

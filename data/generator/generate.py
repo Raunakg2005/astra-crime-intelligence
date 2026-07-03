@@ -555,27 +555,38 @@ def pick_offender(rng, offenders, activity_weights, subhead):
     return rng.choices(range(len(offenders)), weights=activity_weights, k=1)[0]
 
 
+BRIEF_PLACES = ["the KSRTC bus stand", "the market road", "a residential layout",
+                "the highway junction", "a commercial complex", "the temple street",
+                "the railway station area", "the main road", "an ATM kiosk",
+                "a farmhouse on the outskirts", "the industrial estate", "a lodge"]
+
+
 def make_brief(rng, subhead, district_name):
-    """Short natural-language BriefFacts (feeds NLP / entity-extraction demos)."""
-    name = ref.SUBHEAD_NAME.get(subhead, "offence")
-    templates = {
-        204: "Complainant reports theft of {item} from {place} at {district}. Unknown accused involved.",
-        205: "Motor vehicle ({item}) reported stolen from {place}, {district}. FIR registered.",
-        206: "Chain snatching reported near {place}, {district}. Two-wheeler-borne accused fled.",
-        203: "House break-in and burglary at {place}, {district}. Valuables missing.",
-        202: "Robbery reported at {place}, {district}. Accused threatened complainant with weapon.",
-        101: "Body found / murder reported at {place}, {district}. Investigation initiated.",
-        303: "Complaint of cruelty and harassment registered at {district}.",
-        601: "Complainant cheated of money by accused at {place}, {district}.",
-        801: "Online financial fraud reported; complainant lost money via fraudulent link, {district}.",
-        701: "Accused apprehended with contraband near {place}, {district}.",
-    }
-    items = ["gold ornaments", "cash", "mobile phone", "two-wheeler", "car", "laptop", "documents"]
-    places = ["bus stand", "market road", "residential layout", "highway junction",
-              "commercial complex", "temple street", "railway station", "main road"]
-    t = templates.get(subhead, "{crime} reported at {place}, {district}. FIR registered under investigation.")
-    return t.format(item=rng.choice(items), place=rng.choice(places),
-                    district=district_name, crime=name)
+    """Realistic BriefFacts narrative that DESCRIBES the incident with entities but
+    never names the crime category — a genuine corpus for the NLP classifier."""
+    head = ref.SUBHEAD_TO_HEAD.get(subhead, 2)
+    r = rng.random()
+    if r < 0.20:
+        # ~20% vague / low-signal briefs -> forces realistic (not perfect) accuracy
+        t = rng.choice(ref.GENERIC_BRIEFS)
+    elif r < 0.28 and head in ref.CONFUSABLE_BRIEFS:
+        # ~8% confusable briefs shared with a neighbouring head -> class-boundary ambiguity
+        t = rng.choice(ref.CONFUSABLE_BRIEFS[head])
+    else:
+        templates = ref.BRIEF_SUBHEAD_TEMPLATES.get(subhead) or ref.BRIEF_HEAD_TEMPLATES.get(head) \
+            or ["An incident was reported at {place} and is under investigation."]
+        t = rng.choice(templates)
+    place = f"{rng.choice(BRIEF_PLACES)} in {district_name}"
+    return t.format(
+        place=place,
+        item=rng.choice(ref.NLP_ENTITIES["item"]),
+        weapon=rng.choice(ref.NLP_ENTITIES["weapon"]),
+        vehicle=rng.choice(ref.NLP_ENTITIES["vehicle"]),
+        contraband=rng.choice(ref.NLP_ENTITIES["contraband"]),
+        pretext=rng.choice(ref.NLP_ENTITIES["pretext"]),
+        relation=rng.choice(ref.RELATIONS),
+        value=f"{rng.randint(2, 500) * 1000:,}",
+    )
 
 
 def main():

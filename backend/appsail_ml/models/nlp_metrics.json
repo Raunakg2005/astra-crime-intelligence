@@ -1,0 +1,87 @@
+{
+  "task": "crime-type classification from BriefFacts",
+  "champion": "multinomial_nb",
+  "champion_version": 1,
+  "metrics": {
+    "accuracy": 0.8605,
+    "macro_f1": 0.8785,
+    "weighted_f1": 0.8645,
+    "cv_macro_f1": 0.8793,
+    "n_classes": 8
+  },
+  "leaderboard": [
+    {
+      "family": "multinomial_nb",
+      "cv_score": 0.8793,
+      "cv_std": 0.0026
+    },
+    {
+      "family": "ridge",
+      "cv_score": 0.8731,
+      "cv_std": 0.0031
+    },
+    {
+      "family": "logreg",
+      "cv_score": 0.87,
+      "cv_std": 0.0028
+    },
+    {
+      "family": "sgd_logloss",
+      "cv_score": 0.865,
+      "cv_std": 0.0035
+    },
+    {
+      "family": "linear_svc",
+      "cv_score": 0.8626,
+      "cv_std": 0.003
+    },
+    {
+      "family": "random_forest",
+      "cv_score": 0.8436,
+      "cv_std": 0.0034
+    },
+    {
+      "family": "extra_trees",
+      "cv_score": 0.8422,
+      "cv_std": 0.0023
+    },
+    {
+      "family": "complement_nb",
+      "cv_score": 0.8385,
+      "cv_std": 0.0044
+    },
+    {
+      "family": "xgboost",
+      "cv_score": 0.8357,
+      "cv_std": 0.0032
+    },
+    {
+      "family": "passive_aggressive",
+      "cv_score": 0.8312,
+      "cv_std": 0.0096
+    }
+  ],
+  "classes": [
+    "Crimes Against Body",
+    "Crimes Against Children",
+    "Crimes Against Property",
+    "Crimes Against Public Order & Safety",
+    "Crimes Against Women",
+    "Cyber Crimes",
+    "Economic Offences",
+    "Offences Against State / Special Laws"
+  ],
+  "per_class_f1": {
+    "Crimes Against Body": 0.876,
+    "Crimes Against Children": 0.9,
+    "Crimes Against Property": 0.824,
+    "Crimes Against Public Order & Safety": 0.889,
+    "Crimes Against Women": 0.882,
+    "Cyber Crimes": 0.88,
+    "Economic Offences": 0.901,
+    "Offences Against State / Special Laws": 0.876
+  },
+  "gpu": true,
+  "device": "cuda",
+  "data_rows": 40000
+}

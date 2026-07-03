@@ -178,6 +178,33 @@ export interface ModelRegistry {
   >;
 }
 
+export interface NlpClassification {
+  input: string;
+  predicted_head: string;
+  predictions: { crime_head: string; confidence: number }[];
+  entities: Record<string, string[]>;
+  error?: string;
+}
+
+export interface NlpModelInfo {
+  champion: string;
+  champion_version: number;
+  metrics: { accuracy: number; macro_f1: number; weighted_f1: number; cv_macro_f1: number; n_classes: number };
+  leaderboard: { family: string; cv_score: number; cv_std: number }[];
+  classes: string[];
+  per_class_f1: Record<string, number>;
+  gpu: boolean;
+  device: string;
+  data_rows: number;
+}
+
+export interface MoCluster {
+  cluster: number;
+  size: number;
+  top_terms: string[];
+  dominant_head: string;
+}
+
 export interface TimeSeries {
   monthly: { month: string; count: number }[];
   dow_hour: { dow: number; hour: number; count: number }[];
@@ -205,6 +232,11 @@ export const api = {
   risk: () => http.get<{ districts: RiskDistrict[] }>("/api/risk").then((r) => r.data.districts),
   modelInfo: () => http.get<ModelInfo>("/api/model-info").then((r) => r.data),
   modelRegistry: () => http.get<ModelRegistry>("/api/model-registry").then((r) => r.data),
+  nlpClassify: (text: string) =>
+    http.get<NlpClassification>("/api/nlp/classify", { params: { text } }).then((r) => r.data),
+  nlpModelInfo: () => http.get<NlpModelInfo>("/api/nlp/model-info").then((r) => r.data),
+  nlpClusters: () =>
+    http.get<{ clusters: MoCluster[]; n_clusters: number }>("/api/nlp/clusters").then((r) => r.data),
 };
 
 // crime-head -> colour (consistent across views)

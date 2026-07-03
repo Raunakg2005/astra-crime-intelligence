@@ -159,6 +159,24 @@ def get_model_registry():
     return out
 
 
+@app.get("/api/nlp/model-info", tags=["nlp"])
+def nlp_model_info():
+    """NLP crime-text classifier metrics + model bake-off leaderboard."""
+    return A.nlp_model_info()
+
+
+@app.get("/api/nlp/classify", tags=["nlp"])
+def nlp_classify(text: str = Query(..., description="FIR BriefFacts narrative to classify")):
+    """Classify a free-text FIR narrative into a crime head + extract entities."""
+    return A.nlp_classify(text)
+
+
+@app.get("/api/nlp/clusters", tags=["nlp"])
+def nlp_clusters():
+    """Unsupervised modus-operandi clusters over the narratives."""
+    return A.nlp_mo_clusters()
+
+
 @app.get("/", tags=["overview"])
 def root():
     return {

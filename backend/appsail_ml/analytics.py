@@ -39,6 +39,75 @@ def _ml_features():
     return mlfeatures
 
 
+@functools.lru_cache(maxsize=1)
+def _nlp():
+    """Load the NLP champion pipeline + MO clusterer + text helpers (from ml/)."""
+    import joblib
+    import nlp as mlnlp  # ml/nlp.py -> clean_text, extract_entities
+    clf_path = os.path.join(MODELS_DIR, "nlp_classifier.joblib")
+    cl_path = os.path.join(MODELS_DIR, "nlp_mo_clusters.joblib")
+    art = joblib.load(clf_path) if os.path.exists(clf_path) else None
+    clusters = joblib.load(cl_path) if os.path.exists(cl_path) else None
+    return art, clusters, mlnlp
+
+
+def nlp_classify(text: str):
+    """Classify a free-text FIR narrative into a crime head + extract entities."""
+    art, _, mlnlp = _nlp()
+    if art is None:
+        return {"error": "NLP model not trained — run: cd backend/ml && python cli.py train-nlp"}
+    clean = mlnlp.clean_text(text)
+    pipe, classes = art["pipeline"], art["classes"]
+    if art.get("has_proba") and hasattr(pipe, "predict_proba"):
+        proba = pipe.predict_proba([clean])[0]
+    else:
+        dfun = np.atleast_2d(pipe.decision_function([clean]))[0]
+        e = np.exp(dfun - dfun.max())
+        proba = e / e.sum()
+    order = np.argsort(proba)[::-1][:3]
+    return {
+        "input": text,
+        "predicted_head": classes[int(order[0])],
+        "predictions": [{"crime_head": classes[int(i)], "confidence": round(float(proba[i]), 3)}
+                        for i in order],
+        "entities": mlnlp.extract_entities(text),
+    }
+
+
+def nlp_model_info():
+    path = os.path.join(MODELS_DIR, "nlp_metrics.json")
+    if os.path.exists(path):
+        import json
+        with open(path) as f:
+            return json.load(f)
+    return {"trained": False}
+
+
+@functools.lru_cache(maxsize=1)
+def nlp_mo_clusters():
+    """Unsupervised modus-operandi clusters over BriefFacts (top terms + size)."""
+    _, clusters, _ = _nlp()
+    if clusters is None:
+        return {"clusters": []}
+    km, terms, vec = clusters["kmeans"], clusters["terms"], clusters["vectorizer"]
+    df = db.load_cases()[["BriefFacts", "CrimeHead"]].dropna()
+    labels = km.predict(vec.transform(df["BriefFacts"].map(_nlp()[2].clean_text)))
+    df = df.assign(cluster=labels)
+    centers = km.cluster_centers_
+    out = []
+    for i in range(km.n_clusters):
+        g = df[df["cluster"] == i]
+        top_idx = centers[i].argsort()[::-1][:6]
+        out.append({
+            "cluster": int(i),
+            "size": int(len(g)),
+            "top_terms": [str(terms[j]) for j in top_idx],
+            "dominant_head": g["CrimeHead"].value_counts().idxmax() if len(g) else None,
+        })
+    out.sort(key=lambda c: -c["size"])
+    return {"clusters": out, "n_clusters": km.n_clusters}
+
+
 @functools.lru_cache(maxsize=8)
 def _load_model(name: str):
     """Load a persisted model artefact (trained by train.py). Returns None if the

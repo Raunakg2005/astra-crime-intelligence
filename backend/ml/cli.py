@@ -29,6 +29,16 @@ def main(argv=None):
         import pipeline
         pipeline.run()
 
+    elif cmd == "train-nlp":
+        import nlp
+        nlp.run()
+
+    elif cmd == "train-all":
+        import nlp
+        import pipeline
+        pipeline.run()
+        nlp.run()
+
     elif cmd in ("list", "registry"):
         import registry
         info = registry.list_models()

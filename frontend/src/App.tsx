@@ -4,6 +4,7 @@ import Overview from "./pages/Overview";
 import Geospatial from "./pages/Geospatial";
 import Network from "./pages/Network";
 import Predictive from "./pages/Predictive";
+import NlpIntel from "./pages/NlpIntel";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/geospatial" element={<Geospatial />} />
         <Route path="/network" element={<Network />} />
         <Route path="/predictive" element={<Predictive />} />
+        <Route path="/nlp" element={<NlpIntel />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

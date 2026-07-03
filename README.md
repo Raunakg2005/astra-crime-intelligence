@@ -78,6 +78,12 @@ docs/              architecture, data dictionary, pitch
       **R² 0.70**. Retrain: `cd backend/ml && python cli.py train` (maps to Catalyst Cron).
 - [x] **React dashboard** — Overview, Geospatial (MapLibre), Link Analysis (Cytoscape),
       Predictive AI; command-center UI wired to live API, builds clean, no console errors
+- [x] **NLP crime-text pipeline** (`backend/ml/nlp.py`) — classify crime head from the
+      free-text `BriefFacts` narrative: text cleaning → TF-IDF → **bake-off of 10 classifiers**
+      (MultinomialNB/ComplementNB/LogReg/LinearSVC/SGD/PassiveAggressive/Ridge/RF/ExtraTrees/
+      **XGBoost-GPU**) via stratified CV → champion (**86% accuracy, macro-F1 0.88**) → registry.
+      Plus **rule-based entity extraction** (weapons/vehicles/items/amounts) and **KMeans
+      modus-operandi clustering**. Live "classify a narrative" demo in the UI (NLP Text AI page).
 - [ ] AI copilot (QuickML LLM serving + RAG) + PDF reports (SmartBrowz)
 - [ ] Catalyst deploy config + CI/CD + auth + alerts
 
