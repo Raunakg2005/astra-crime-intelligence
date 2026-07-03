@@ -156,6 +156,28 @@ export interface ModelInfo {
   anomaly?: { n_cases: number; flagged: number };
 }
 
+export interface ModelRegistry {
+  pipeline: { xgboost?: boolean; gpu?: boolean; device?: string; mlflow?: boolean };
+  tasks: Record<
+    string,
+    {
+      champion_version: number;
+      versions: number[];
+      family: string;
+      metrics: Record<string, number>;
+      cv: {
+        n_splits?: number;
+        n_candidates?: number;
+        metric?: string;
+        mean?: number;
+        leaderboard?: { family: string; cv_score: number }[];
+      };
+      n_train?: number;
+      n_holdout?: number;
+    }
+  >;
+}
+
 export interface TimeSeries {
   monthly: { month: string; count: number }[];
   dow_hour: { dow: number; hour: number; count: number }[];
@@ -182,6 +204,7 @@ export const api = {
   anomalies: (top = 30) => http.get<AnomalyResp>("/api/anomalies", { params: { top } }).then((r) => r.data),
   risk: () => http.get<{ districts: RiskDistrict[] }>("/api/risk").then((r) => r.data.districts),
   modelInfo: () => http.get<ModelInfo>("/api/model-info").then((r) => r.data),
+  modelRegistry: () => http.get<ModelRegistry>("/api/model-registry").then((r) => r.data),
 };
 
 // crime-head -> colour (consistent across views)

@@ -1,46 +1,48 @@
 {
   "risk": {
     "classifier": {
-      "roc_auc": 0.738,
-      "accuracy": 0.798,
-      "precision": 0.645,
-      "recall": 0.279,
-      "f1": 0.39,
-      "positive_rate_test": 0.231
+      "roc_auc": 0.7258,
+      "f1": 0.5013,
+      "precision": 0.5706,
+      "recall": 0.4471,
+      "accuracy": 0.7942,
+      "pr_auc": 0.5169,
+      "cv_roc_auc": 0.6994,
+      "positive_rate_test": 0.2314
     },
     "regressor": {
-      "mae": 2.796,
-      "baseline_mae_lag1": 3.019,
-      "r2": 0.611
+      "mae": 2.817,
+      "baseline_mae_lag1": 3.0934,
+      "r2": 0.6966,
+      "rmse": 4.1638
     },
-    "n_train_rows": 4681,
-    "n_test_rows": 1550,
-    "feature_importance": {
-      "lag1": 0.29,
-      "district_base": 0.286,
-      "roll4_mean": 0.101,
-      "roll8_mean": 0.07,
-      "lag2": 0.059,
-      "roll4_std": 0.042,
-      "month_cos": 0.036,
-      "clear_rate_lag1": 0.031,
-      "lag3": 0.027,
-      "month_sin": 0.026,
-      "lag4": 0.024,
-      "heinous_lag1": 0.008
+    "champion_versions": {
+      "classifier": 1,
+      "regressor": 1
     }
   },
   "anomaly": {
     "n_cases": 40000,
-    "features": [
-      "hour",
-      "GravityOffenceID",
-      "n_accused",
-      "report_delay_h",
-      "subhead_rarity",
-      "heinous"
-    ],
     "flagged": 400
   },
-  "data_rows": 40000
+  "data_rows": 40000,
+  "data_fingerprint": "d9c60dedd4f21558",
+  "families": {
+    "classifier": {
+      "task": "risk_classifier",
+      "version": 1,
+      "promoted": true,
+      "challenger_metric": 0.7258,
+      "champion_metric": null,
+      "primary_metric": "roc_auc"
+    },
+    "regressor": {
+      "task": "risk_regressor",
+      "version": 1,
+      "promoted": true,
+      "challenger_metric": 2.817,
+      "champion_metric": null,
+      "primary_metric": "mae"
+    }
+  }
 }

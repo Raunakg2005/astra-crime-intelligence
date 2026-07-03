@@ -36,3 +36,8 @@ frontend/**/*.tsbuildinfo
 
 # trained model binaries (regenerate: python backend/appsail_ml/train.py)
 backend/appsail_ml/models/*.joblib
+
+# ML registry artefacts (regenerate: cd backend/ml && python cli.py train)
+backend/ml/registry/**/*.joblib
+backend/ml/mlruns/
+__pycache__/

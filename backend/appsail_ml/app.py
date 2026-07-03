@@ -12,12 +12,17 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 import analytics as A
 import db
+
+_ML_DIR = os.path.join(os.path.dirname(__file__), "..", "ml")
+if _ML_DIR not in sys.path:
+    sys.path.insert(0, _ML_DIR)
 
 app = FastAPI(
     title="KSP Crime Intelligence API",
@@ -107,12 +112,51 @@ def get_risk():
 
 @app.get("/api/model-info", tags=["ai"])
 def get_model_info():
-    """Training metrics for the persisted models (from train.py -> metrics.json)."""
+    """Serving metrics for the champion models (pipeline -> metrics.json)."""
     path = os.path.join(os.path.dirname(__file__), "models", "metrics.json")
     if os.path.exists(path):
         with open(path) as f:
             return json.load(f)
-    return {"trained": False, "message": "run train.py to train models"}
+    return {"trained": False, "message": "run: cd backend/ml && python cli.py train"}
+
+
+@app.get("/api/model-registry", tags=["ai"])
+def get_model_registry():
+    """MLOps view: registered versions, champion per task, selected family, the
+    time-series-CV leaderboard of families compared, and pipeline capabilities."""
+    reg_dir = os.path.join(_ML_DIR, "registry")
+    out = {"tasks": {}, "pipeline": {}}
+    try:
+        import models as ml_models  # ml/models.py -> capability flags
+        out["pipeline"] = {"xgboost": ml_models.HAS_XGB, "gpu": ml_models.HAS_GPU,
+                           "device": ml_models.XGB_DEVICE}
+    except Exception:
+        pass
+    try:
+        import tracking
+        out["pipeline"]["mlflow"] = tracking.HAS_MLFLOW
+    except Exception:
+        pass
+    if not os.path.isdir(reg_dir):
+        return out
+    for task in sorted(os.listdir(reg_dir)):
+        tdir = os.path.join(reg_dir, task)
+        champ = os.path.join(tdir, "champion.json")
+        if not (os.path.isdir(tdir) and os.path.exists(champ)):
+            continue
+        cj = json.load(open(champ))
+        v = cj["version"]
+        md = json.load(open(os.path.join(tdir, f"v{v}", "metadata.json")))
+        out["tasks"][task] = {
+            "champion_version": v,
+            "versions": [int(x[1:]) for x in os.listdir(tdir) if x.startswith("v") and x[1:].isdigit()],
+            "family": md.get("family"),
+            "metrics": md.get("metrics"),
+            "cv": md.get("cv"),
+            "n_train": md.get("n_train"),
+            "n_holdout": md.get("n_holdout"),
+        }
+    return out
 
 
 @app.get("/", tags=["overview"])

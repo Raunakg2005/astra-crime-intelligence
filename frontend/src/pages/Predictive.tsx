@@ -10,8 +10,8 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
-import { AlertOctagon, Gauge, Sparkles, Cpu } from "lucide-react";
-import { api, Anomaly, ModelInfo, RiskDistrict } from "../api";
+import { AlertOctagon, Gauge, Sparkles, Cpu, Trophy, GitBranch } from "lucide-react";
+import { api, Anomaly, ModelInfo, ModelRegistry, RiskDistrict } from "../api";
 import { PageHeader, Spinner, SeverityBadge, Section } from "../components/ui";
 
 const bandColor = (b: string) => (b === "High" ? "#f43f5e" : b === "Medium" ? "#fbbf24" : "#34d399");
@@ -21,10 +21,12 @@ export default function Predictive() {
   const [anoms, setAnoms] = useState<Anomaly[]>([]);
   const [flagged, setFlagged] = useState<{ n: number; total: number }>();
   const [model, setModel] = useState<ModelInfo>();
+  const [reg, setReg] = useState<ModelRegistry>();
 
   useEffect(() => {
     api.risk().then(setRisk);
     api.modelInfo().then(setModel);
+    api.modelRegistry().then(setReg);
     api.anomalies(30).then((a) => {
       setAnoms(a.anomalies);
       setFlagged({ n: a.n_flagged, total: a.total_cases });
@@ -32,6 +34,8 @@ export default function Predictive() {
   }, []);
 
   if (!risk.length) return <div className="p-8"><Spinner /></div>;
+
+  const clf = reg?.tasks?.risk_classifier;
 
   const scatter = risk.map((r) => ({
     x: r.recent_30d,
@@ -59,13 +63,28 @@ export default function Predictive() {
       {/* model card — MLOps transparency */}
       {model?.risk && (
         <div className="card card-pad mb-5 animate-fadeUp">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Cpu className="h-4 w-4 text-accent-green" />
             <span className="text-sm font-semibold text-slate-200">Model card</span>
-            <span className="chip !py-0.5 ml-1">GradientBoosting · temporal split</span>
-            <span className="text-[11px] text-slate-500 ml-auto">
-              {model.risk.n_train_rows.toLocaleString()} train / {model.risk.n_test_rows.toLocaleString()} test rows
-            </span>
+            {clf && (
+              <span className="chip !py-0.5">
+                <Trophy className="h-3 w-3 text-accent-amber" /> champion: {clf.family} · v{clf.champion_version}
+              </span>
+            )}
+            {clf?.cv?.n_candidates && (
+              <span className="chip !py-0.5">
+                {clf.cv.n_candidates} families · {clf.cv.n_splits}-fold time-series CV
+              </span>
+            )}
+            {reg?.pipeline?.gpu && (
+              <span className="chip !py-0.5 !border-accent-green/40 !text-accent-green">GPU · {reg.pipeline.device}</span>
+            )}
+            {reg?.pipeline?.mlflow && <span className="chip !py-0.5">MLflow tracked</span>}
+            {clf && (
+              <span className="text-[11px] text-slate-500 ml-auto">
+                {(clf.n_train ?? 0).toLocaleString()} train / {(clf.n_holdout ?? 0).toLocaleString()} hold-out rows
+              </span>
+            )}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Metric label="Risk ROC-AUC" value={model.risk.classifier.roc_auc} good />
@@ -74,6 +93,19 @@ export default function Predictive() {
             <Metric label="Forecast R²" value={model.risk.regressor.r2} good />
             <Metric label="Anomalies" value={model.anomaly?.flagged ?? "—"} sub={`/ ${model.anomaly?.n_cases?.toLocaleString() ?? ""}`} />
           </div>
+          {clf?.cv?.leaderboard && (
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              <span className="stat-label flex items-center gap-1"><GitBranch className="h-3 w-3" /> families compared:</span>
+              {clf.cv.leaderboard.map((l, i) => (
+                <span
+                  key={l.family}
+                  className={`badge ${i === 0 ? "bg-accent-green/15 text-accent-green border border-accent-green/30" : "bg-ink-700 text-slate-400"}`}
+                >
+                  {l.family} · {l.cv_score}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

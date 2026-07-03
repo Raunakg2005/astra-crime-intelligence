@@ -69,10 +69,13 @@ docs/              architecture, data dictionary, pitch
 - [x] **Analytics/ML service** — DBSCAN hotspots, z-score trend alerts, Louvain
       communities, ego networks, repeat-offender profiles, IsolationForest anomalies,
       district risk scoring, temporal patterns (FastAPI)
-- [x] **Trained ML + MLOps** — `train.py` pipeline: GradientBoosting high-risk classifier
-      (ROC-AUC 0.66) + next-week count regressor (MAE beats naive baseline, R² 0.56) with
-      a **temporal train/test split**, persisted `.joblib` artefacts + `metrics.json`,
-      served loaded at inference; model card surfaced in the UI
+- [x] **MLOps training pipeline** (`backend/ml/`) — a *real* pipeline, not one-shot fitting:
+      data validation → feature engineering → **multi-family model selection**
+      (LogReg/RF/HistGBM/GBM/**XGBoost-GPU**) via **expanding-window time-series CV** +
+      RandomizedSearch → F1-tuned threshold → hold-out evaluation → **versioned model
+      registry with champion/challenger promotion** → **MLflow** experiment tracking +
+      JSONL ledger → auto-generated **model cards**. Champion ROC-AUC **0.73**, forecast
+      **R² 0.70**. Retrain: `cd backend/ml && python cli.py train` (maps to Catalyst Cron).
 - [x] **React dashboard** — Overview, Geospatial (MapLibre), Link Analysis (Cytoscape),
       Predictive AI; command-center UI wired to live API, builds clean, no console errors
 - [ ] AI copilot (QuickML LLM serving + RAG) + PDF reports (SmartBrowz)
@@ -82,14 +85,34 @@ docs/              architecture, data dictionary, pitch
 
 ```bash
 # 0. data + trained models (one-time / after data changes)
-cd data && python generator/generate.py --cases 12000 && python build_sqlite.py
-cd ../backend/appsail_ml && pip install -r ../../requirements.txt && python train.py
+pip install -r requirements.txt
+cd data && python generator/generate.py --cases 40000 && python build_sqlite.py
+cd ../backend/ml && python cli.py train      # full MLOps pipeline -> registers champions
+#   other pipeline commands: python cli.py list | history | card risk_classifier
 
 # 1. analytics API
-python -m uvicorn app:app --port 8000
+cd ../appsail_ml && python -m uvicorn app:app --port 8000
 # 2. dashboard (proxies /api -> :8000)
 cd ../../frontend && npm install && npm run dev   # http://localhost:5173
 ```
+
+### MLOps pipeline (`backend/ml/`)
+
+```
+data.py       data loading + validation gates (fail fast on bad data)
+features.py   district×week panel: lag / rolling / momentum / seasonality features
+models.py     candidate families + search spaces (XGBoost uses CUDA GPU if present)
+evaluate.py   metrics, time-series CV, F1-optimal threshold, model-card generation
+tracking.py   MLflow (SQLite backend) + append-only JSONL experiment ledger
+registry.py   versioned artefacts + champion/challenger promotion (only promote if better)
+pipeline.py   orchestration: validate → features → CV+search → eval → register → track
+cli.py        train | list | history | card   (the unit a Catalyst Cron job invokes)
+```
+
+Every run writes `registry/<task>/v<N>/{model.joblib, metadata.json, model_card.md}` and,
+if it beats the incumbent on the hold-out metric, promotes it to champion and copies it to
+`appsail_ml/models/` for serving. Inference reuses `ml/features.py` so training and serving
+never drift. `mlflow ui --backend-store-uri sqlite:///backend/ml/mlruns/mlflow.db` to browse runs.
 
 ## Run the data layer
 

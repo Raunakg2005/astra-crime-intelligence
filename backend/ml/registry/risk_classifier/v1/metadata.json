@@ -1,0 +1,61 @@
+{
+  "family": "logreg",
+  "params": {
+    "model__C": 10.0
+  },
+  "metrics": {
+    "roc_auc": 0.7258,
+    "pr_auc": 0.5169,
+    "f1": 0.5013,
+    "precision": 0.5706,
+    "recall": 0.4471,
+    "accuracy": 0.7942,
+    "positive_rate": 0.2314,
+    "operating_threshold": 0.625,
+    "cv_roc_auc": 0.6994
+  },
+  "cv": {
+    "n_splits": 5,
+    "n_candidates": 5,
+    "metric": "roc_auc",
+    "mean": 0.6994328260862448,
+    "std": 0.0,
+    "leaderboard": [
+      {
+        "family": "logreg",
+        "cv_score": 0.6994
+      },
+      {
+        "family": "grad_boost",
+        "cv_score": 0.6939
+      },
+      {
+        "family": "xgboost",
+        "cv_score": 0.6903
+      },
+      {
+        "family": "hist_gbm",
+        "cv_score": 0.6825
+      },
+      {
+        "family": "random_forest",
+        "cv_score": 0.6752
+      }
+    ]
+  },
+  "data": {
+    "n_cases": 40000,
+    "n_districts": 31,
+    "date_from": "2022-07-01",
+    "date_to": "2026-06-30",
+    "span_days": 1460,
+    "warnings": [],
+    "data_fingerprint": "d9c60dedd4f21558"
+  },
+  "n_train": 5208,
+  "n_holdout": 899,
+  "task": "risk_classifier",
+  "version": 1,
+  "registered_at": "2026-07-03T05:35:26.599380+00:00",
+  "primary_metric": "roc_auc"
+}

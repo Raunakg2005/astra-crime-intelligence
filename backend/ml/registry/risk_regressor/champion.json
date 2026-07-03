@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "metrics": {
+    "mae": 2.817,
+    "rmse": 4.1638,
+    "r2": 0.6966,
+    "baseline_mae": 3.0934,
+    "skill_vs_baseline_pct": 8.9376,
+    "cv_mae": 2.877
+  },
+  "promoted_at": "2026-07-03T05:36:46.434602+00:00",
+  "primary_metric": "mae"
+}

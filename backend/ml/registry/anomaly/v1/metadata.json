@@ -1,0 +1,25 @@
+{
+  "family": "IsolationForest",
+  "params": {
+    "contamination": 0.01
+  },
+  "metrics": {
+    "n_cases": 40000,
+    "flagged": 400,
+    "flagged_pct": 1.0
+  },
+  "cv": {},
+  "data": {
+    "n_cases": 40000,
+    "n_districts": 31,
+    "date_from": "2022-07-01",
+    "date_to": "2026-06-30",
+    "span_days": 1460,
+    "warnings": [],
+    "data_fingerprint": "d9c60dedd4f21558"
+  },
+  "task": "anomaly",
+  "version": 1,
+  "registered_at": "2026-07-03T05:36:48.434522+00:00",
+  "primary_metric": "flagged_pct"
+}

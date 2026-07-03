@@ -16,6 +16,7 @@ from __future__ import annotations
 import functools
 import math
 import os
+import sys
 from datetime import timedelta
 
 import numpy as np
@@ -24,6 +25,18 @@ import pandas as pd
 import db
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
+
+# The ML pipeline (../ml) owns feature engineering. Inference reuses the SAME code
+# so training and serving never drift (identical feature set).
+_ML_DIR = os.path.join(os.path.dirname(__file__), "..", "ml")
+if _ML_DIR not in sys.path:
+    sys.path.insert(0, _ML_DIR)
+
+
+@functools.lru_cache(maxsize=1)
+def _ml_features():
+    import features as mlfeatures  # ml/features.py
+    return mlfeatures
 
 
 @functools.lru_cache(maxsize=8)
@@ -402,9 +415,10 @@ def _risk_scores_trained():
     clf_art = _load_model("risk_classifier.joblib")
     if reg_art is None or clf_art is None:
         return None
-    import train  # build_panel / latest_features / RISK_FEATURES
 
-    latest = train.latest_features()
+    mlf = _ml_features()
+    panel = mlf.build_panel(db.load_cases())
+    latest = mlf.latest_frame(panel)   # most recent complete feature row per district
     if latest.empty:
         return None
     X = latest[reg_art["features"]]

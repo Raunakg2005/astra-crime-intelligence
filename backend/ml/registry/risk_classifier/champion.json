@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "metrics": {
+    "roc_auc": 0.7258,
+    "pr_auc": 0.5169,
+    "f1": 0.5013,
+    "precision": 0.5706,
+    "recall": 0.4471,
+    "accuracy": 0.7942,
+    "positive_rate": 0.2314,
+    "operating_threshold": 0.625,
+    "cv_roc_auc": 0.6994
+  },
+  "promoted_at": "2026-07-03T05:35:26.600379+00:00",
+  "primary_metric": "roc_auc"
+}
