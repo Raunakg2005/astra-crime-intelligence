@@ -193,6 +193,34 @@ def kpis():
 
 
 # ---------------------------------------------------------------------------
+# Incident points (real lat/lng) — served as GeoJSON for map clustering
+# ---------------------------------------------------------------------------
+
+def incidents(district_id=None, crime_head=None, days=None, limit=60000):
+    """Every FIR at its real coordinate, as a GeoJSON FeatureCollection. The map
+    clusters these natively by zoom (dense = hotspot; zoom in = exact locations)."""
+    df = db.load_cases().dropna(subset=["latitude", "longitude"])
+    if district_id:
+        df = df[df["DistrictID"] == int(district_id)]
+    if crime_head:
+        df = df[df["CrimeHead"] == crime_head]
+    if days:
+        latest = _latest(db.load_cases())
+        df = df[df["RegDate"] > latest - timedelta(days=int(days))]
+    if len(df) > limit:
+        df = df.sample(limit, random_state=42)   # cap payload; sample is representative
+    feats = [{
+        "type": "Feature",
+        "geometry": {"type": "Point",
+                     "coordinates": [round(float(r.longitude), 5), round(float(r.latitude), 5)]},
+        "properties": {"head": r.CrimeHead, "crime": r.CrimeSubHead, "district": r.DistrictName,
+                       "date": str(r.RegDate.date()), "cn": r.CrimeNo, "gravity": r.Gravity},
+    } for r in df.itertuples(index=False)]
+    return {"type": "FeatureCollection", "features": feats,
+            "count": len(feats), "returned_of": int(len(df))}
+
+
+# ---------------------------------------------------------------------------
 # District choropleth
 # ---------------------------------------------------------------------------
 

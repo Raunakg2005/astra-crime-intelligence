@@ -13,9 +13,12 @@ from __future__ import annotations
 import json
 import os
 import sys
+import urllib.parse
+import urllib.request
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 import analytics as A
 import db
@@ -30,6 +33,7 @@ app = FastAPI(
     description="Geospatial, network, predictive and anomaly analytics over the KSP FIR database.",
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)   # compress large GeoJSON responses
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],          # tighten to the Catalyst web-client origin in prod
@@ -52,6 +56,67 @@ def get_kpis():
 def get_districts():
     """District choropleth: counts, clearance, heinous share, top crime head."""
     return A.district_summary()
+
+
+@app.get("/api/incidents", tags=["geospatial"])
+def get_incidents(
+    district_id: int | None = Query(None),
+    crime_head: str | None = Query(None),
+    days: int | None = Query(None),
+):
+    """All FIRs as GeoJSON points (real coordinates) for native map clustering."""
+    return A.incidents(district_id, crime_head, days)
+
+
+# ---- free-text place search (villages / areas / streets), not just districts ----
+_NOMINATIM = "https://nominatim.openstreetmap.org/search"
+_KA_VIEWBOX = "73.6,18.6,78.7,11.4"          # west,north,east,south  (Karnataka)
+_GEO_CACHE: dict[str, list] = {}             # in-memory memo (per keystroke → 1 upstream call)
+
+
+@app.get("/api/geocode", tags=["geospatial"])
+def geocode(q: str = Query(..., min_length=2, description="place / village / area / street to find")):
+    """Free-text place search over Karnataka via OpenStreetMap Nominatim, so the map can
+    fly to ANY village, locality or street — not only the 31 districts. Server-side proxy:
+    respects Nominatim's policy (identifying User-Agent, bounded to KA) and is cached, so
+    on Catalyst it's fronted by Cache/CDN and Nominatim isn't hit per keystroke."""
+    key = q.strip().lower()
+    if len(key) < 2:
+        return {"results": []}
+    if key in _GEO_CACHE:
+        return {"results": _GEO_CACHE[key]}
+
+    params = urllib.parse.urlencode({
+        "q": q, "format": "jsonv2", "limit": 6,
+        "countrycodes": "in", "viewbox": _KA_VIEWBOX, "bounded": 1,
+    })
+    req = urllib.request.Request(
+        f"{_NOMINATIM}?{params}",
+        headers={"User-Agent": "Astra-KSP-CrimeIntel/1.0 (KSP datathon; raunakg2005@gmail.com)"},
+    )
+    results: list[dict] = []
+    try:
+        with urllib.request.urlopen(req, timeout=6) as resp:   # noqa: S310 (fixed https host)
+            data = json.load(resp)
+        for it in data:
+            try:
+                lat, lng = float(it["lat"]), float(it["lon"])
+            except (KeyError, ValueError, TypeError):
+                continue
+            parts = [p.strip() for p in it.get("display_name", "").split(",") if p.strip()]
+            results.append({
+                "name": it.get("name") or (parts[0] if parts else q),
+                "context": ", ".join(p for p in parts[1:4] if not p.isdigit()),
+                "type": it.get("type") or it.get("category") or "place",
+                "lat": lat, "lng": lng,
+            })
+    except Exception:
+        results = []
+
+    if len(_GEO_CACHE) > 500:                # soft cap so the memo can't grow unbounded
+        _GEO_CACHE.clear()
+    _GEO_CACHE[key] = results
+    return {"results": results}
 
 
 @app.get("/api/hotspots", tags=["geospatial"])
