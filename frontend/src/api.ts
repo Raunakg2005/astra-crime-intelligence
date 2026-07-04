@@ -29,6 +29,25 @@ export interface District {
   top_crime_head: string;
 }
 
+export interface IncidentFeature {
+  type: "Feature";
+  geometry: { type: "Point"; coordinates: [number, number] };
+  properties: { head: string; crime: string; district: string; date: string; cn: string; gravity: string };
+}
+export interface IncidentFC {
+  type: "FeatureCollection";
+  features: IncidentFeature[];
+  count: number;
+}
+
+export interface GeoPlace {
+  name: string;
+  context: string;
+  type: string;
+  lat: number;
+  lng: number;
+}
+
 export interface Cluster {
   cluster_id: number;
   lat: number;
@@ -226,8 +245,12 @@ export interface TimeSeries {
 export const api = {
   kpis: () => http.get<Kpis>("/api/kpis").then((r) => r.data),
   districts: () => http.get<District[]>("/api/districts").then((r) => r.data),
+  geocode: (q: string) =>
+    http.get<{ results: GeoPlace[] }>("/api/geocode", { params: { q } }).then((r) => r.data.results),
   hotspots: (p: { district_id?: number; crime_head?: string; days?: number } = {}) =>
     http.get<Hotspots>("/api/hotspots", { params: p }).then((r) => r.data),
+  incidents: (p: { district_id?: number; crime_head?: string; days?: number } = {}) =>
+    http.get<IncidentFC>("/api/incidents", { params: p }).then((r) => r.data),
   trends: (z = 2) =>
     http.get<{ alerts: Alert[] }>("/api/trends", { params: { z_threshold: z } }).then((r) => r.data.alerts),
   timeseries: (p: { crime_head?: string; district_id?: number } = {}) =>
