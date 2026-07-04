@@ -1,129 +1,188 @@
-# Astra — AI-Driven Crime Analytics & Intelligence Platform for KSP
+<div align="center">
 
-> Datathon 2026 (Hack2skill) · Karnataka State Police / SCRB
-> A Crime Intelligence & Analytical Platform that turns the KSP FIR database into
-> geospatial hotspot intelligence, criminal-network link analysis, and AI-driven
-> predictive dashboards — **deployed 100% on Zoho Catalyst**.
+# 🛡️ Astra — AI-Driven Crime Analytics & Intelligence Platform
 
-## The problem
-KSP crime records live in Excel-based silos with no advanced analytics. SCRB gets
-fragmented information and policing stays reactive. Astra replaces static sheets with
-dynamic spatial + relational storytelling and moves SCRB to a **strategic intelligence hub**.
+**Turning the Karnataka State Police FIR database into geospatial hotspot intelligence,
+criminal-network link analysis, and AI-driven predictive dashboards — deployed 100% on Zoho Catalyst.**
 
-## Six headline capabilities (mapped to the problem statement)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-GPU-EB5E28)
+![MLflow](https://img.shields.io/badge/MLflow-tracking-0194E2?logo=mlflow&logoColor=white)
+![Zoho Catalyst](https://img.shields.io/badge/Deploy-Zoho%20Catalyst-E42527)
 
-1. **Geospatial Command Center** — district → police-station drill-down choropleth,
-   spatiotemporal hotspots (DBSCAN + time-of-day), **red-zone pulsing** when a crime
-   category spikes vs its historical baseline (z-score).
-2. **Link & Network Analysis** — node graph of accused ↔ case ↔ victim ↔ location,
-   repeat-offender profiles across jurisdictions, **Louvain community detection** to
-   surface organised networks + recurring modus operandi.
-3. **Predictive Risk Dashboard** — Zia AutoML risk score per district/typology,
-   socio-economic overlays to explain the "why behind the where".
-4. **Anomaly Radar** — Isolation Forest flags deviant cases for investigators to link.
-5. **Trend & Pattern Discovery** — temporal decomposition, seasonality, emerging-typology alerts.
-6. **AI Copilot** — natural-language querying + RAG over IPC sections and case facts.
+*Hack2skill Datathon 2026 · Karnataka State Police / State Crime Records Bureau (SCRB)*
 
-## Tech stack — 100% Catalyst-native
+</div>
+
+---
+
+## The Problem
+
+KSP maintains extensive crime records, but the analytical ecosystem is held back by **data
+silos and Excel-based reporting**, an **absence of AI-driven analytics**, **fragmented
+information** reaching SCRB, and **reactive rather than proactive** policing. Astra replaces
+static sheets with dynamic spatial + relational + predictive intelligence, moving SCRB toward
+a **strategic intelligence hub**.
+
+## Key Capabilities
+
+| | Capability | What it does |
+|---|---|---|
+| 🗺️ | **Geospatial Command Center** | District → police-station drill-down, spatiotemporal **DBSCAN** hotspots, **red-zone** alerts when a crime category spikes vs. its historical baseline (z-score) |
+| 🕸️ | **Link & Network Analysis** | Co-offending graph, repeat-offender profiles across jurisdictions, **Louvain** community detection to surface organised networks & recurring MO |
+| 🧠 | **Predictive Intelligence** | Trained **crime-forecasting** models (next-week high-risk districts + volume) with proper time-series validation; socio-economic overlays |
+| 🚨 | **Anomaly Radar** | **Isolation Forest** flags cases deviating from behavioural norms for investigators to link |
+| 📝 | **NLP Crime-Text AI** | Classify crime type from the free-text FIR narrative (**18-model bake-off**), entity extraction, modus-operandi clustering |
+| 📈 | **Trend & Pattern Discovery** | Temporal decomposition, seasonality, emerging-typology alerts |
+
+## Dashboard
+
+A dark "command-center" SPA with five views — **Overview** (KPIs + red-zone alerts),
+**Geospatial** (MapLibre map), **Link Analysis** (Cytoscape graphs), **Predictive AI**
+(risk landscape + model card), and **NLP Text AI** (live classifier + model leaderboard).
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Data["Data Layer"]
+      GEN["Synthetic FIR generator<br/>(27-table schema, seed-controlled)"] --> DB[("SQLite / Catalyst Data Store")]
+    end
+    subgraph ML["ML / MLOps  (backend/ml)"]
+      DB --> FE["Feature engineering"]
+      FE --> PIPE["Model selection · time-series CV<br/>registry · MLflow · champion/challenger"]
+      PIPE --> REG[("Model registry<br/>+ served champions")]
+    end
+    subgraph API["Analytics API  (Catalyst AppSail)"]
+      DB --> SVC["FastAPI service"]
+      REG --> SVC
+    end
+    subgraph UI["Dashboard  (Catalyst Web Hosting)"]
+      SVC -->|/api| SPA["React + Vite SPA"]
+    end
+```
+
+## Tech Stack — 100% Catalyst-native
+
+Deployment on **Zoho Catalyst is mandatory** for this datathon; every capability maps to its
+Catalyst service.
 
 | Layer | Choice | Catalyst service |
 |---|---|---|
-| Frontend SPA | React + Vite + TypeScript, Tailwind + shadcn/ui | Web Client Hosting |
-| Maps / charts / graph | MapLibre GL · Recharts · Cytoscape.js | — |
-| API / backend | Node.js serverless | Serverless Functions + API Gateway |
-| Analytics / ML | Python (FastAPI) | AppSail (managed runtime) |
+| Frontend SPA | React + Vite + TS, Tailwind | Web Client Hosting |
+| Maps · charts · graph | MapLibre GL · Recharts · Cytoscape | — |
+| API / backend | Node serverless | Serverless Functions + API Gateway |
+| Analytics / ML | Python (FastAPI) | AppSail |
 | Relational DB | FIR schema (27 tables) | Data Store |
-| Hot aggregates | precomputed KPIs/hotspots | Cache |
-| Reports / exports | PDF intelligence reports | Stratus + SmartBrowz |
-| Predictive risk | district×time risk scoring | Zia AutoML |
-| NL query + RAG | crime-data copilot | QuickML (LLM Serving + RAG) |
-| Entity extraction/OCR | parse BriefFacts / scanned FIRs | Zia Services |
-| Auth (RBAC) | SCRB admin / district officer | Authentication |
-| Nightly recompute | hotspots, baselines, risk | Cron |
-| Real-time alerts | spike → red-zone | Signals + Event Functions |
-| Orchestration | ingest→enrich→score→alert | Circuits |
-| Alerts delivery | email + push | Mail + Push Notifications |
-| CI/CD | build & deploy | Pipelines |
+| Predictive risk | tabular forecasting | Zia AutoML |
+| NLP / RAG | crime-text + copilot | QuickML · Zia Text Analytics |
+| Auth (RBAC) · Cache · Storage | | Authentication · Cache · Stratus |
+| Scheduled retraining · alerts | | Cron · Signals · Mail/Push |
+| CI/CD | | Pipelines |
 
-> Deployment via Catalyst is mandatory for this datathon; every capability uses its
-> matching Catalyst service.
+---
 
-## Repository layout
+## ML & MLOps
+
+Not one-shot fitting — a real pipeline (`backend/ml/`): **data validation → feature
+engineering → multi-family model selection via time-series CV → hold-out evaluation →
+versioned model registry with champion/challenger → MLflow tracking → auto model cards →
+scheduled retraining** (`cli.py train`, mapping to Catalyst Cron).
+
+| Task | Models compared | Champion result |
+|---|---|---|
+| High-risk district (next week) | LogReg · RF · HistGBM · GBM · XGBoost-GPU | **ROC-AUC ≈ 0.70** |
+| Next-week FIR volume | Ridge · RF · HistGBM · GBM · XGBoost-GPU | **R² ≈ 0.64** (beats naive baseline) |
+| Crime-text classification | **18 classifiers** incl. MLP neural-net + XGBoost-GPU | **Accuracy ≈ 0.86 · macro-F1 ≈ 0.87** |
+| Anomaly detection | Isolation Forest | 1% flagged |
+
+GPU: XGBoost auto-uses CUDA when an NVIDIA GPU is present (falls back to CPU).
+
+📊 **Full per-model performance** (all 5 tabular families + all 18 NLP models, with per-class
+F1) is in **[docs/RESULTS.md](docs/RESULTS.md)**.
+
+## Data & Fidelity
+
+Real FIR microdata is confidential, so Astra runs on a **schema-faithful synthetic dataset**
+(privacy-by-construction) seeded with real Karnataka ground truth (31 districts + geo,
+IPC/NDPS acts & sections, NCRB taxonomy). A **fidelity suite** (`backend/analysis/`) validates
+it against **real published statistics** (NCRB Crime-in-India 2022, Census 2011):
+
+| Check | Result | |
+|---|---|---|
+| District crime ↔ Census population | Spearman **0.78** | ✅ |
+| Women-crime composition vs NCRB | TVD **0.009** | ✅ |
+| Women chargesheeting vs 82.8% | Δ **0.02** | ✅ |
+| Weekly momentum autocorrelation | **0.64** | ✅ |
+| Co-offending network modularity | Q **0.63** | ✅ |
+| Offender concentration (Gini) | **0.50** | ⚠️ honestly reported |
+
+See [`backend/analysis/FIDELITY_REPORT.md`](backend/analysis/FIDELITY_REPORT.md) and
+[`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md).
+
+---
+
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| 📘 **[docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)** | Full technical reference — architecture, data schema, ML/NLP pipelines, API, frontend, deployment |
+| ⚙️ **[docs/SETUP.md](docs/SETUP.md)** | Setup & reproduction guide (deps → dataset → training → run) |
+| 📊 **[docs/RESULTS.md](docs/RESULTS.md)** | Every model's performance (all families + 18 NLP models) |
+| 🔬 **[backend/analysis/FIDELITY_REPORT.md](backend/analysis/FIDELITY_REPORT.md)** | Synthetic-vs-real data fidelity |
+| 📄 **[docs/PAPER_OUTLINE.md](docs/PAPER_OUTLINE.md)** | Publishable write-up (honest framing + ethics) |
+
+## Quick Start
+
+Full reproduction steps (deps, dataset, training, running) are in **[docs/SETUP.md](docs/SETUP.md)**.
+
+```bash
+python -m pip install -r requirements.txt
+python data/generator/generate.py --cases 40000 --seed 42   # generate dataset
+python data/build_sqlite.py                                  # build DB
+cd backend/ml && python cli.py train-all && cd ../..         # train all models
+cd backend/appsail_ml && python -m uvicorn app:app --port 8000   # API  (terminal A)
+cd frontend && npm install && npm run dev                        # dashboard (terminal B)
+```
+
+> The dataset and trained-model binaries are **git-ignored** (generated). The commands above
+> regenerate them deterministically (`--seed 42`).
+
+## Project Structure
 
 ```
-data/            synthetic FIR dataset generator + SQLite build  ✅ done
-  generator/       reference.py (real KA ground truth) + generate.py
-  build_sqlite.py  CSV -> queryable SQLite (mirrors Data Store)
+data/
+  generator/        reference.py (real KA ground truth) + generate.py
+  build_sqlite.py   CSV -> queryable SQLite (mirrors Data Store)
 backend/
-  appsail_ml/      Python FastAPI analytics/ML service (Catalyst AppSail)
-  functions/       Node serverless functions (Catalyst Functions)
-frontend/          React SPA (Catalyst Web Client Hosting)
-catalyst/          Catalyst project config / Data Store DDL / deploy
-docs/              architecture, data dictionary, pitch
+  ml/               MLOps pipeline: features, models, CV, registry, MLflow, cli
+  appsail_ml/       FastAPI analytics service (hotspots, network, forecast, NLP, anomaly)
+  analysis/         fidelity evaluation vs real published statistics
+frontend/           React + Vite + Tailwind dashboard (5 pages)
+docs/               DOCUMENTATION.md · SETUP.md · RESULTS.md · PAPER_OUTLINE.md
 ```
 
-## Status
+## Responsible Use
 
-- [x] **Data layer** — schema-conformant generator (27 tables), 12k cases, planted
-      hotspot/network/trend/anomaly signal, SQLite build, validated intelligence queries
-- [x] **Analytics/ML service** — DBSCAN hotspots, z-score trend alerts, Louvain
-      communities, ego networks, repeat-offender profiles, IsolationForest anomalies,
-      district risk scoring, temporal patterns (FastAPI)
-- [x] **MLOps training pipeline** (`backend/ml/`) — a *real* pipeline, not one-shot fitting:
-      data validation → feature engineering → **multi-family model selection**
-      (LogReg/RF/HistGBM/GBM/**XGBoost-GPU**) via **expanding-window time-series CV** +
-      RandomizedSearch → F1-tuned threshold → hold-out evaluation → **versioned model
-      registry with champion/challenger promotion** → **MLflow** experiment tracking +
-      JSONL ledger → auto-generated **model cards**. Champion ROC-AUC **0.73**, forecast
-      **R² 0.70**. Retrain: `cd backend/ml && python cli.py train` (maps to Catalyst Cron).
-- [x] **React dashboard** — Overview, Geospatial (MapLibre), Link Analysis (Cytoscape),
-      Predictive AI; command-center UI wired to live API, builds clean, no console errors
-- [x] **NLP crime-text pipeline** (`backend/ml/nlp.py`) — classify crime head from the
-      free-text `BriefFacts` narrative: text cleaning → TF-IDF → **bake-off of 10 classifiers**
-      (MultinomialNB/ComplementNB/LogReg/LinearSVC/SGD/PassiveAggressive/Ridge/RF/ExtraTrees/
-      **XGBoost-GPU**) via stratified CV → champion (**86% accuracy, macro-F1 0.88**) → registry.
-      Plus **rule-based entity extraction** (weapons/vehicles/items/amounts) and **KMeans
-      modus-operandi clustering**. Live "classify a narrative" demo in the UI (NLP Text AI page).
-- [ ] AI copilot (QuickML LLM serving + RAG) + PDF reports (SmartBrowz)
-- [ ] Catalyst deploy config + CI/CD + auth + alerts
+Predictive policing carries real risks (bias, feedback loops, over-policing). Astra is built
+as **decision-support, not automated enforcement**: synthetic-only data (no surveillance of
+real people), transparent model cards & open metrics, human-in-the-loop framing, and an
+explicit non-goal of individual-level predictive policing. See the ethics section of
+[`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md).
 
-## Run it locally (two terminals)
+## Roadmap
 
-```bash
-# 0. data + trained models (one-time / after data changes)
-pip install -r requirements.txt
-cd data && python generator/generate.py --cases 40000 && python build_sqlite.py
-cd ../backend/ml && python cli.py train      # full MLOps pipeline -> registers champions
-#   other pipeline commands: python cli.py list | history | card risk_classifier
+- [ ] AI copilot (QuickML LLM serving + RAG over IPC & case facts) + PDF reports (SmartBrowz)
+- [ ] Catalyst deployment config + CI/CD (Pipelines) + Auth (RBAC) + Cron/Signals alerts
+- [ ] Learned generative model (SDV/CTGAN) on a real seed, re-validated by the fidelity suite
 
-# 1. analytics API
-cd ../appsail_ml && python -m uvicorn app:app --port 8000
-# 2. dashboard (proxies /api -> :8000)
-cd ../../frontend && npm install && npm run dev   # http://localhost:5173
-```
+---
 
-### MLOps pipeline (`backend/ml/`)
-
-```
-data.py       data loading + validation gates (fail fast on bad data)
-features.py   district×week panel: lag / rolling / momentum / seasonality features
-models.py     candidate families + search spaces (XGBoost uses CUDA GPU if present)
-evaluate.py   metrics, time-series CV, F1-optimal threshold, model-card generation
-tracking.py   MLflow (SQLite backend) + append-only JSONL experiment ledger
-registry.py   versioned artefacts + champion/challenger promotion (only promote if better)
-pipeline.py   orchestration: validate → features → CV+search → eval → register → track
-cli.py        train | list | history | card   (the unit a Catalyst Cron job invokes)
-```
-
-Every run writes `registry/<task>/v<N>/{model.joblib, metadata.json, model_card.md}` and,
-if it beats the incumbent on the hold-out metric, promotes it to champion and copies it to
-`appsail_ml/models/` for serving. Inference reuses `ml/features.py` so training and serving
-never drift. `mlflow ui --backend-store-uri sqlite:///backend/ml/mlruns/mlflow.db` to browse runs.
-
-## Run the data layer
-
-```bash
-cd data
-python generator/generate.py --cases 12000 --seed 42
-python build_sqlite.py
-```
+<div align="center">
+Built for KSP · Datathon 2026
+</div>

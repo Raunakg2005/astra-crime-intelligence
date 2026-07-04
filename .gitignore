@@ -1,43 +1,88 @@
-# Generated data (regenerate with: python data/generator/generate.py)
+# ============================================================================
+#  KSP Crime Intelligence (Astra) — .gitignore
+#  Rule of thumb: commit source + small metadata; ignore anything generated,
+#  large, secret, or machine-specific. Regeneration commands noted per section.
+# ============================================================================
+
+# ---- Generated data & databases -------------------------------------------
+# regenerate: python data/generator/generate.py --cases 40000 && python data/build_sqlite.py
 data/out/
+data/**/out/
 *.db
 *.sqlite
+*.sqlite3
+# generated-data archives (existing tracked zips stay tracked until git rm --cached)
+data/*.zip
 
-# Python
+# ---- Python ---------------------------------------------------------------
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.so
 .venv/
 venv/
+env/
+.python-version
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
 
-# Node / frontend
+# ---- ML models, registry, tracking, outputs -------------------------------
+# regenerate: cd backend/ml && python cli.py train-all
+# Keep small text metadata (metadata.json, model_card.md, champion.json,
+# experiments.jsonl) tracked; ignore heavy binaries + generated bulk outputs.
+*.joblib
+*.pkl
+*.onnx
+backend/ml/mlruns/
+backend/appsail_ml/models/nlp_all/
+backend/appsail_ml/models/nlp_all_predictions.csv
+backend/analysis/fidelity_report.json
+
+# ---- Node / frontend ------------------------------------------------------
 node_modules/
 frontend/dist/
+frontend/.vite/
 .vite/
-
-# Env / secrets
-.env
-.env.local
-*.local
-catalyst-cli-token*
-.catalystrc
-
-# OS / editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-
-# tsc -b build artifacts
+.eslintcache
+*.tsbuildinfo
+# tsc -b build artifacts emitted next to sources
 frontend/vite.config.js
 frontend/vite.config.d.ts
-frontend/*.tsbuildinfo
-frontend/**/*.tsbuildinfo
 
-# trained model binaries (regenerate: python backend/appsail_ml/train.py)
-backend/appsail_ml/models/*.joblib
+# ---- Zoho Catalyst deployment ---------------------------------------------
+.catalyst/
+catalyst-cli-token*
+.catalystrc
+**/functions/**/node_modules/
 
-# ML registry artefacts (regenerate: cd backend/ml && python cli.py train)
-backend/ml/registry/**/*.joblib
-backend/ml/mlruns/
-__pycache__/
+# ---- Env / secrets --------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+secrets.json
+
+# ---- Logs & temp ----------------------------------------------------------
+*.log
+logs/
+tmp/
+.cache/
+
+# ---- OS / editor ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
