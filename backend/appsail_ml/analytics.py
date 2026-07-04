@@ -158,6 +158,15 @@ def _latest(df):
     return df["RegDate"].max()
 
 
+def _finite(x, default=0.0):
+    """JSON-safe float: NaN/inf/None -> default (FastAPI rejects non-compliant floats)."""
+    try:
+        x = float(x)
+    except (TypeError, ValueError):
+        return default
+    return x if np.isfinite(x) else default
+
+
 # ---------------------------------------------------------------------------
 # KPIs
 # ---------------------------------------------------------------------------
@@ -553,30 +562,34 @@ def risk_scores():
         return trained
     df = db.load_cases()
     latest = _latest(df)
-    r30 = df[df["RegDate"] > latest - timedelta(days=30)].groupby("DistrictID").size()
+    # reindex all windows over the full district set so alignment never yields NaN
+    districts = df.groupby("DistrictID").size().index
+    r30 = df[df["RegDate"] > latest - timedelta(days=30)].groupby("DistrictID").size().reindex(districts, fill_value=0)
     p30 = df[(df["RegDate"] <= latest - timedelta(days=30)) &
-             (df["RegDate"] > latest - timedelta(days=60))].groupby("DistrictID").size()
-    heinous = df.groupby("DistrictID")["heinous"].mean()
-    vol = df.groupby("DistrictID").size()
+             (df["RegDate"] > latest - timedelta(days=60))].groupby("DistrictID").size().reindex(districts, fill_value=0)
+    heinous = df.groupby("DistrictID")["heinous"].mean().reindex(districts, fill_value=0)
+    vol = df.groupby("DistrictID").size().reindex(districts, fill_value=0)
 
     def norm(s):
-        return (s - s.min()) / (s.max() - s.min() + 1e-9)
+        rng = s.max() - s.min()
+        return (s - s.min()) / rng if rng else s * 0.0
 
     trend = (r30 - p30) / (p30 + 1)
+    voln = norm(vol)
     out = []
-    for did in vol.index:
-        v = norm(vol).get(did, 0)
-        t = float(np.clip(trend.get(did, 0), -1, 3)) / 3
-        h = float(heinous.get(did, 0))
-        score = 100 * (0.45 * v + 0.35 * max(t, 0) + 0.20 * h)
+    for did in districts:
+        v = _finite(voln.get(did, 0))
+        t = _finite(np.clip(trend.get(did, 0), -1, 3)) / 3
+        h = _finite(heinous.get(did, 0))
+        score = _finite(100 * (0.45 * v + 0.35 * max(t, 0) + 0.20 * h))
         lat, lng = DISTRICT_CENTROIDS.get(int(did), (None, None))
         out.append({
             "district_id": int(did),
             "district": df[df["DistrictID"] == did]["DistrictName"].iloc[0],
             "lat": lat, "lng": lng,
-            "risk_score": round(float(score), 1),
+            "risk_score": round(score, 1),
             "recent_30d": int(r30.get(did, 0)),
-            "trend_pct": round(float(trend.get(did, 0)) * 100, 1),
+            "trend_pct": round(_finite(trend.get(did, 0)) * 100, 1),
             "heinous_share_pct": round(h * 100, 1),
             "risk_band": "High" if score >= 60 else ("Medium" if score >= 30 else "Low"),
         })

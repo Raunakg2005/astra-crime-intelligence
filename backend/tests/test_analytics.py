@@ -56,6 +56,19 @@ def test_risk_scores(dataset):
     assert {"district", "risk_score", "risk_band"}.issubset(r[0])
 
 
+def test_risk_scores_heuristic_is_json_safe(dataset, monkeypatch):
+    """Regression: with no trained models (CI), the heuristic fallback must not emit
+    NaN/inf (FastAPI's JSON encoder rejects them). Forces the fallback path."""
+    import json
+    import math
+    monkeypatch.setattr(A, "_risk_scores_trained", lambda: None)
+    r = A.risk_scores()
+    json.dumps(r)                                   # must not raise
+    for row in r:
+        for key in ("risk_score", "trend_pct", "heinous_share_pct"):
+            assert math.isfinite(row[key]), f"{key} not finite for {row['district']}"
+
+
 def test_timeseries(dataset):
     ts = A.timeseries()
     assert ts["monthly"] and ts["by_head"]
