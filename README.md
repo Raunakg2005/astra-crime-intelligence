@@ -183,6 +183,3 @@ explicit non-goal of individual-level predictive policing. See the ethics sectio
 
 ---
 
-<div align="center">
-Built for KSP · Datathon 2026
-</div>
