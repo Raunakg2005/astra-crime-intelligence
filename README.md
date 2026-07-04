@@ -12,6 +12,7 @@ criminal-network link analysis, and AI-driven predictive dashboards — deployed
 ![XGBoost](https://img.shields.io/badge/XGBoost-GPU-EB5E28)
 ![MLflow](https://img.shields.io/badge/MLflow-tracking-0194E2?logo=mlflow&logoColor=white)
 ![Zoho Catalyst](https://img.shields.io/badge/Deploy-Zoho%20Catalyst-E42527)
+![CI](https://github.com/Raunakg2005/astra-crime-intelligence/actions/workflows/ci.yml/badge.svg)
 
 *Hack2skill Datathon 2026 · Karnataka State Police / State Crime Records Bureau (SCRB)*
 
@@ -153,6 +154,23 @@ cd frontend && npm install && npm run dev                        # dashboard (te
 > The dataset and trained-model binaries are **git-ignored** (generated). The commands above
 > regenerate them deterministically (`--seed 42`).
 
+## Testing & CI
+
+Quality gate so broken code can't land:
+- **GitHub Actions** (`.github/workflows/ci.yml`) — on every push/PR: Python **lint (ruff)** +
+  **pytest**, and frontend **type-check + build**.
+- **pytest suite** (`backend/tests/`) — generator, SQLite, analytics, features, NLP, and API
+  smoke tests, run against a freshly generated small dataset.
+- **pre-commit hooks** (`.pre-commit-config.yaml`) — lint, secret detection, and a large-file
+  guard at commit-time; the full test suite runs at push-time.
+
+```bash
+pip install -r requirements-dev.txt
+pytest backend/tests -q            # run the tests
+ruff check backend data            # lint
+pre-commit install && pre-commit install --hook-type pre-push   # enable local hooks
+```
+
 ## Project Structure
 
 ```
@@ -163,7 +181,9 @@ backend/
   ml/               MLOps pipeline: features, models, CV, registry, MLflow, cli
   appsail_ml/       FastAPI analytics service (hotspots, network, forecast, NLP, anomaly)
   analysis/         fidelity evaluation vs real published statistics
+  tests/            pytest suite (generator, sqlite, analytics, features, nlp, api)
 frontend/           React + Vite + Tailwind dashboard (5 pages)
+.github/workflows/  CI (lint + tests + frontend build)
 docs/               DOCUMENTATION.md · SETUP.md · RESULTS.md · PAPER_OUTLINE.md
 ```
 

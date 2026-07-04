@@ -1,0 +1,34 @@
+# Local git hooks — install once with:  pre-commit install && pre-commit install --hook-type pre-push
+# Commit-time hooks stay fast (lint, secrets, large-file guard); the full test suite
+# runs at push-time so buggy code can't be pushed.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        exclude: ^frontend/tsconfig.*\.json$   # tsconfig files allow comments
+      - id: detect-private-key                 # block committing secrets/keys
+      - id: check-added-large-files            # block large binaries (e.g. datasets, models)
+        args: ["--maxkb=1500"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.5
+    hooks:
+      - id: ruff                               # bug-focused lint (E9,F from pyproject.toml)
+        args: ["--fix"]
+
+  # Full test suite as a pre-push gate (heavier — only on push, not every commit)
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (backend)
+        entry: python -m pytest backend/tests -q
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

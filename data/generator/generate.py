@@ -344,8 +344,6 @@ def generate(num_cases: int, seed: int, outdir: str):
     cs_id = 1
 
     district_lookup = {d[0]: d for d in ref.DISTRICTS}
-    district_ids = [d[0] for d in ref.DISTRICTS]
-    district_weights = [d[5] for d in ref.DISTRICTS]
     subhead_ids = list(ref.SUBHEAD_WEIGHTS.keys())
     subhead_weights = list(ref.SUBHEAD_WEIGHTS.values())
 

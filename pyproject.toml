@@ -1,0 +1,14 @@
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+# generated/output dirs and vendored files
+extend-exclude = ["data/out", "frontend", "**/mlruns", "**/registry"]
+
+[tool.ruff.lint]
+# Bug-focused, not style-nazi: pyflakes (unused imports, undefined names, bad
+# f-strings) + syntax errors. This is what "don't push broken code" means.
+select = ["E9", "F"]

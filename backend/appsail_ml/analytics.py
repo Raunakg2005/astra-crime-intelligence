@@ -14,13 +14,11 @@ Everything returns plain JSON-serialisable dicts for the API layer.
 from __future__ import annotations
 
 import functools
-import math
 import os
 import sys
 from datetime import timedelta
 
 import numpy as np
-import pandas as pd
 
 import db
 
@@ -343,7 +341,6 @@ def _cooffending_graph(min_cases=2):
 
 def communities(min_size=3, top=15):
     import community as community_louvain
-    import networkx as nx
 
     G = _cooffending_graph(min_cases=2)
     # only nodes with at least one co-offender matter for communities

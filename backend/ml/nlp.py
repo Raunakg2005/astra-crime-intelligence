@@ -22,7 +22,6 @@ import os
 import re
 import warnings
 
-import numpy as np
 import pandas as pd
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.decomposition import TruncatedSVD
@@ -217,7 +216,7 @@ def run():
     pd.DataFrame(preds_table).to_csv(
         os.path.join(config.SERVING_DIR, "nlp_all_predictions.csv"), index=False)
     print(f"    saved {len(cand)} models -> {all_dir}")
-    print(f"    saved outputs -> nlp_all_models.json, nlp_all_predictions.csv")
+    print("    saved outputs -> nlp_all_models.json, nlp_all_predictions.csv")
 
     best_name = leaderboard[0]["family"]
     metrics = {k: leaderboard[0][k] for k in ("accuracy", "macro_f1", "weighted_f1")}
