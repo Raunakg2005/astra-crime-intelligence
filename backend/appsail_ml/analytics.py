@@ -51,9 +51,20 @@ def _nlp():
     return art, clusters, mlnlp
 
 
-def nlp_classify(text: str):
-    """Classify a free-text FIR narrative into a crime head + extract entities."""
+@functools.lru_cache(maxsize=24)
+def _nlp_model(name: str):
+    """Load one of the saved per-model artefacts (models/nlp_all/<name>.joblib)."""
+    import joblib
+    p = os.path.join(MODELS_DIR, "nlp_all", f"{name}.joblib")
+    return joblib.load(p) if os.path.exists(p) else None
+
+
+def nlp_classify(text: str, model: str | None = None):
+    """Classify a free-text FIR narrative into a crime head + extract entities.
+    Optionally run a specific saved model (any of the 18) instead of the champion."""
     art, _, mlnlp = _nlp()
+    if model:
+        art = _nlp_model(model) or art
     if art is None:
         return {"error": "NLP model not trained — run: cd backend/ml && python cli.py train-nlp"}
     clean = mlnlp.clean_text(text)
@@ -67,11 +78,22 @@ def nlp_classify(text: str):
     order = np.argsort(proba)[::-1][:3]
     return {
         "input": text,
+        "model": art.get("family"),
         "predicted_head": classes[int(order[0])],
         "predictions": [{"crime_head": classes[int(i)], "confidence": round(float(proba[i]), 3)}
                         for i in order],
         "entities": mlnlp.extract_entities(text),
     }
+
+
+def nlp_all_models():
+    """Full per-model comparison (metrics + per-class F1) for all saved models."""
+    path = os.path.join(MODELS_DIR, "nlp_all_models.json")
+    if os.path.exists(path):
+        import json
+        with open(path) as f:
+            return json.load(f)
+    return {"models": []}
 
 
 def nlp_model_info():

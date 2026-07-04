@@ -20,6 +20,6 @@
   },
   "task": "anomaly",
   "version": 1,
-  "registered_at": "2026-07-03T05:36:48.434522+00:00",
+  "registered_at": "2026-07-03T06:44:20.900649+00:00",
   "primary_metric": "flagged_pct"
 }

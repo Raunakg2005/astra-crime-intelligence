@@ -4,39 +4,39 @@
     "model__alpha": 30.0
   },
   "metrics": {
-    "mae": 2.817,
-    "rmse": 4.1638,
-    "r2": 0.6966,
-    "baseline_mae": 3.0934,
-    "skill_vs_baseline_pct": 8.9376,
-    "cv_mae": 2.877
+    "mae": 2.5829,
+    "rmse": 3.5427,
+    "r2": 0.6435,
+    "baseline_mae": 3.0623,
+    "skill_vs_baseline_pct": 15.6552,
+    "cv_mae": 2.4093
   },
   "cv": {
     "n_splits": 5,
     "n_candidates": 5,
     "metric": "neg_mean_absolute_error",
-    "mean": -2.8769987937003583,
+    "mean": -2.4092908317277906,
     "std": 0.0,
     "leaderboard": [
       {
         "family": "ridge",
-        "cv_score": -2.877
-      },
-      {
-        "family": "grad_boost",
-        "cv_score": -2.897
-      },
-      {
-        "family": "random_forest",
-        "cv_score": -2.9069
-      },
-      {
-        "family": "hist_gbm",
-        "cv_score": -2.9223
+        "cv_score": -2.4093
       },
       {
         "family": "xgboost",
-        "cv_score": -2.9231
+        "cv_score": -2.6167
+      },
+      {
+        "family": "grad_boost",
+        "cv_score": -2.6505
+      },
+      {
+        "family": "hist_gbm",
+        "cv_score": -2.6528
+      },
+      {
+        "family": "random_forest",
+        "cv_score": -2.657
       }
     ]
   },
@@ -53,6 +53,6 @@
   "n_holdout": 899,
   "task": "risk_regressor",
   "version": 1,
-  "registered_at": "2026-07-03T05:36:46.433601+00:00",
+  "registered_at": "2026-07-03T06:44:18.947924+00:00",
   "primary_metric": "mae"
 }

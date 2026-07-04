@@ -166,9 +166,19 @@ def nlp_model_info():
 
 
 @app.get("/api/nlp/classify", tags=["nlp"])
-def nlp_classify(text: str = Query(..., description="FIR BriefFacts narrative to classify")):
-    """Classify a free-text FIR narrative into a crime head + extract entities."""
-    return A.nlp_classify(text)
+def nlp_classify(
+    text: str = Query(..., description="FIR BriefFacts narrative to classify"),
+    model: str | None = Query(None, description="optional: run a specific saved model"),
+):
+    """Classify a free-text FIR narrative into a crime head + extract entities.
+    Pass ?model=<name> to run any of the 18 saved models instead of the champion."""
+    return A.nlp_classify(text, model)
+
+
+@app.get("/api/nlp/models", tags=["nlp"])
+def nlp_all_models():
+    """Full comparison of ALL saved NLP models (metrics + per-class F1)."""
+    return A.nlp_all_models()
 
 
 @app.get("/api/nlp/clusters", tags=["nlp"])

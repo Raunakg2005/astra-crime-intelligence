@@ -5,15 +5,15 @@
 **Data:** 40,000 FIRs · 31 districts · 2022-07-01 → 2026-06-30 · fingerprint `d9c60dedd4f21558`  
 
 ## Hold-out metrics (most recent weeks, never seen in training/CV)
-- **mae**: 2.817
-- **rmse**: 4.1638
-- **r2**: 0.6966
-- **baseline_mae**: 3.0934
-- **skill_vs_baseline_pct**: 8.9376
-- **cv_mae**: 2.877
+- **mae**: 2.5829
+- **rmse**: 3.5427
+- **r2**: 0.6435
+- **baseline_mae**: 3.0623
+- **skill_vs_baseline_pct**: 15.6552
+- **cv_mae**: 2.4093
 
 ## Cross-validation
-- mean neg_mean_absolute_error: -2.8770 ± 0.0000
+- mean neg_mean_absolute_error: -2.4093 ± 0.0000
 
 ## Best hyperparameters
 ```json

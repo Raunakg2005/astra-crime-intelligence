@@ -240,7 +240,7 @@ def generate(num_cases: int, seed: int, outdir: str):
     # ---- Offender pool (planted network / repeat-offender signal) ---------
     # A finite pool of offenders reused across cases. Some are "prolific" (many
     # cases), and offenders belong to co-offending "gangs" that appear together.
-    OFFENDER_POOL = max(200, num_cases // 12)
+    OFFENDER_POOL = max(150, num_cases // 32)
     offenders = []   # dict per offender
     used_names = set()   # keep offender identities globally unique for clean link analysis
     for oi in range(OFFENDER_POOL):
@@ -252,7 +252,7 @@ def generate(num_cases: int, seed: int, outdir: str):
                                   list(ref.SUBHEAD_WEIGHTS.values()))
         # prolificacy: heavy-ish tail but capped so no single offender is unrealistic.
         # Most offenders appear a handful of times; a few "prolific" ones ~20-45 cases.
-        activity = min(rng.paretovariate(1.9), 9.0)
+        activity = min(rng.paretovariate(1.3), 30.0)
         offenders.append({
             "name": unique_offender_name(rng, gender, used_names), "gender": gender,
             "home": home, "pref_mo": pref_mo, "activity": activity,
@@ -291,11 +291,12 @@ def generate(num_cases: int, seed: int, outdir: str):
     cells = []          # (district_id, week_index)
     cell_weights = []
     for did, dname, dlat, dlng, dspan, base_w in ref.DISTRICTS:
-        slope = rng.gauss(0.0, 0.5)          # long-run trend (rising/falling)
+        slope = rng.gauss(0.0, 0.28)         # long-run trend (kept modest so district
+                                             # totals stay tied to population base rate)
         phase = rng.uniform(0, 2 * math.pi)  # seasonal phase
         ar = 0.0
         for wk in range(n_weeks):
-            ar = 0.75 * ar + rng.gauss(0, 0.35)       # AR(1) momentum
+            ar = 0.7 * ar + rng.gauss(0, 0.28)        # AR(1) momentum
             month = (START + timedelta(days=wk * 7)).month
             seasonal = 1 + 0.22 * math.sin(2 * math.pi * month / 12 + phase)
             if month in (3, 4, 10):                    # mild festival/summer bumps
@@ -414,6 +415,10 @@ def generate(num_cases: int, seed: int, outdir: str):
             status = weighted_choice(rng, [1, 2, 3, 7], [4, 4, 2, 2])
         else:
             status = weighted_choice(rng, [1, 2], [7, 3])
+        # NCRB-2022 calibration: crimes against women have a high chargesheeting rate
+        # (~82.8% in Karnataka) -> push most women-crime cases to charge-sheeted/trial.
+        if subhead in ref.WOMEN_SUBHEADS and status not in (2, 5) and rng.random() < 0.8:
+            status = weighted_choice(rng, [2, 7, 5], [7, 2, 1])
 
         court_id = rng.choice(courts_by_district[did]) if status in (2, 5, 6, 7) else None
 
@@ -461,7 +466,7 @@ def generate(num_cases: int, seed: int, outdir: str):
         n_accused = weighted_choice(rng, [1, 2, 3, 4], [62, 24, 10, 4])
         # A case involves the known-offender network ~38% of the time; organised
         # (gang/property/NDPS) crimes lean higher, opportunistic crimes lower.
-        p_known = 0.62 if subhead in (201, 202, 203, 205, 206, 701, 704, 601) else 0.30
+        p_known = 0.82 if subhead in (201, 202, 203, 205, 206, 701, 704, 601) else 0.6
         involves_known = rng.random() < p_known
 
         # people = list of ("pool", idx) or ("oneoff", name/age/gender)

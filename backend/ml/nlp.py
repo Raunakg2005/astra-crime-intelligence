@@ -26,7 +26,13 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.decomposition import TruncatedSVD
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    BaggingClassifier,
+    ExtraTreesClassifier,
+    HistGradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import (
     LogisticRegression,
@@ -36,9 +42,12 @@ from sklearn.linear_model import (
 )
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
-from sklearn.naive_bayes import ComplementNB, MultinomialNB
+from sklearn.naive_bayes import BernoulliNB, ComplementNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
 
 import config
 import data
@@ -100,33 +109,40 @@ def _tfidf():
 
 
 def candidates():
-    """~10 text classifiers. Linear/NB use raw TF-IDF; tree/boosting use TF-IDF→SVD."""
-    svd = lambda: TruncatedSVD(n_components=200, random_state=config.RANDOM_SEED)
+    """~18 text classifiers. Sparse-friendly (NB/linear) use raw TF-IDF; dense models
+    (trees/boosting/kNN/MLP) use TF-IDF→TruncatedSVD(200)."""
+    S = config.RANDOM_SEED
+    svd = lambda: TruncatedSVD(n_components=200, random_state=S)
+    sparse = lambda clf: Pipeline([("tfidf", _tfidf()), ("clf", clf)])
+    dense = lambda clf: Pipeline([("tfidf", _tfidf()), ("svd", svd()), ("clf", clf)])
     c = {
-        "multinomial_nb": Pipeline([("tfidf", _tfidf()), ("clf", MultinomialNB())]),
-        "complement_nb": Pipeline([("tfidf", _tfidf()), ("clf", ComplementNB())]),
-        "logreg": Pipeline([("tfidf", _tfidf()),
-                            ("clf", LogisticRegression(max_iter=2000, C=3.0, n_jobs=-1))]),
-        "linear_svc": Pipeline([("tfidf", _tfidf()), ("clf", LinearSVC(C=1.0))]),
-        "sgd_logloss": Pipeline([("tfidf", _tfidf()),
-                                 ("clf", SGDClassifier(loss="modified_huber", max_iter=2000,
-                                                       random_state=config.RANDOM_SEED))]),
-        "passive_aggressive": Pipeline([("tfidf", _tfidf()),
-                                        ("clf", PassiveAggressiveClassifier(max_iter=2000,
-                                                random_state=config.RANDOM_SEED))]),
-        "ridge": Pipeline([("tfidf", _tfidf()), ("clf", RidgeClassifier())]),
-        "random_forest": Pipeline([("tfidf", _tfidf()), ("svd", svd()),
-                                   ("clf", RandomForestClassifier(n_estimators=300, n_jobs=-1,
-                                           random_state=config.RANDOM_SEED))]),
-        "extra_trees": Pipeline([("tfidf", _tfidf()), ("svd", svd()),
-                                 ("clf", ExtraTreesClassifier(n_estimators=300, n_jobs=-1,
-                                         random_state=config.RANDOM_SEED))]),
+        # --- naive Bayes family ---
+        "multinomial_nb": sparse(MultinomialNB()),
+        "complement_nb": sparse(ComplementNB()),
+        "bernoulli_nb": sparse(BernoulliNB()),
+        # --- linear family ---
+        "logreg": sparse(LogisticRegression(max_iter=2000, C=3.0, n_jobs=-1)),
+        "linear_svc": sparse(LinearSVC(C=1.0)),
+        "sgd_logloss": sparse(SGDClassifier(loss="modified_huber", max_iter=2000, random_state=S)),
+        "passive_aggressive": sparse(PassiveAggressiveClassifier(max_iter=2000, random_state=S)),
+        "ridge": sparse(RidgeClassifier()),
+        "nearest_centroid": sparse(NearestCentroid()),
+        # --- instance / tree ---
+        "knn": dense(KNeighborsClassifier(n_neighbors=15, weights="distance", n_jobs=-1)),
+        "decision_tree": dense(DecisionTreeClassifier(max_depth=25, random_state=S)),
+        # --- ensembles ---
+        "random_forest": dense(RandomForestClassifier(n_estimators=300, n_jobs=-1, random_state=S)),
+        "extra_trees": dense(ExtraTreesClassifier(n_estimators=300, n_jobs=-1, random_state=S)),
+        "bagging": dense(BaggingClassifier(n_estimators=50, n_jobs=-1, random_state=S)),
+        "adaboost": dense(AdaBoostClassifier(n_estimators=200, random_state=S)),
+        "hist_gbm": dense(HistGradientBoostingClassifier(max_iter=300, random_state=S)),
+        # --- neural net (real epochs) ---
+        "mlp": dense(MLPClassifier(hidden_layer_sizes=(128, 64), max_iter=80,
+                                   early_stopping=True, random_state=S)),
     }
     if HAS_XGB:
-        c["xgboost"] = Pipeline([("tfidf", _tfidf()), ("svd", svd()),
-                                 ("clf", XGBClassifier(n_estimators=400, max_depth=6,
-                                         learning_rate=0.1, tree_method="hist",
-                                         device=XGB_DEVICE, random_state=config.RANDOM_SEED))])
+        c["xgboost"] = dense(XGBClassifier(n_estimators=400, max_depth=6, learning_rate=0.1,
+                                           tree_method="hist", device=XGB_DEVICE, random_state=S))
     return c
 
 
@@ -151,46 +167,77 @@ def run():
                                           random_state=config.RANDOM_SEED)
     print(f"    train {len(Xtr):,} / test {len(Xte):,}")
 
-    print("[2/5] model bake-off (stratified 4-fold CV, macro-F1)")
-    cvk = StratifiedKFold(n_splits=4, shuffle=True, random_state=config.RANDOM_SEED)
-    leaderboard = []
-    for name, pipe in candidates().items():
+    import joblib
+    cand = candidates()
+    print(f"[2/6] cross-validate {len(cand)} models (stratified 3-fold CV, macro-F1)")
+    cvk = StratifiedKFold(n_splits=3, shuffle=True, random_state=config.RANDOM_SEED)
+    cv_scores = {}
+    for name, pipe in cand.items():
         jobs = 1 if name == "xgboost" else -1
         scores = cross_val_score(pipe, Xtr, ytr, scoring="f1_macro", cv=cvk, n_jobs=jobs)
-        leaderboard.append({"family": name, "cv_score": round(float(scores.mean()), 4),
-                            "cv_std": round(float(scores.std()), 4)})
+        cv_scores[name] = (round(float(scores.mean()), 4), round(float(scores.std()), 4))
         dev = f" [GPU:{XGB_DEVICE}]" if name == "xgboost" else ""
-        print(f"    {name:20s} macro-F1 {scores.mean():.4f} ± {scores.std():.4f}{dev}")
-    leaderboard.sort(key=lambda r: -r["cv_score"])
+        print(f"    {name:20s} CV macro-F1 {scores.mean():.4f} ± {scores.std():.4f}{dev}")
+
+    print(f"[3/6] fit ALL {len(cand)} models on train, evaluate on hold-out, SAVE EACH")
+    all_dir = os.path.join(config.SERVING_DIR, "nlp_all")
+    os.makedirs(all_dir, exist_ok=True)
+    leaderboard = []
+    preds_table = {"_true": [classes[i] for i in yte]}
+    per_class_by_model = {}
+    for name, pipe in cand.items():
+        pipe.fit(Xtr, ytr)
+        pred = pipe.predict(Xte)
+        has_proba = hasattr(pipe.named_steps["clf"], "predict_proba")
+        m = {
+            "family": name,
+            "cv_score": cv_scores[name][0], "cv_std": cv_scores[name][1],
+            "accuracy": round(float(accuracy_score(yte, pred)), 4),
+            "macro_f1": round(float(f1_score(yte, pred, average="macro")), 4),
+            "weighted_f1": round(float(f1_score(yte, pred, average="weighted")), 4),
+            "has_proba": has_proba,
+        }
+        leaderboard.append(m)
+        preds_table[name] = [classes[i] for i in pred]
+        per_class_by_model[name] = {
+            k: round(v["f1-score"], 3) for k, v in
+            classification_report(yte, pred, target_names=classes, output_dict=True,
+                                  zero_division=0).items() if k in classes}
+        # SAVE every fitted model as its own servable artefact
+        joblib.dump({"pipeline": pipe, "classes": list(classes), "family": name,
+                     "has_proba": has_proba}, os.path.join(all_dir, f"{name}.joblib"))
+        print(f"    {name:20s} acc {m['accuracy']:.4f}  macroF1 {m['macro_f1']:.4f}  -> saved")
+    leaderboard.sort(key=lambda r: -r["macro_f1"])
+
+    # save ALL outputs: per-model metrics table + every model's test predictions
+    with open(os.path.join(config.SERVING_DIR, "nlp_all_models.json"), "w", encoding="utf-8") as f:
+        import json
+        json.dump({"models": leaderboard, "per_class_f1": per_class_by_model,
+                   "classes": classes, "n_test": len(yte)}, f, indent=2)
+    pd.DataFrame(preds_table).to_csv(
+        os.path.join(config.SERVING_DIR, "nlp_all_predictions.csv"), index=False)
+    print(f"    saved {len(cand)} models -> {all_dir}")
+    print(f"    saved outputs -> nlp_all_models.json, nlp_all_predictions.csv")
 
     best_name = leaderboard[0]["family"]
-    print(f"[3/5] refit champion: {best_name}")
-    champ = candidates()[best_name]
-    champ.fit(Xtr, ytr)
-    pred = champ.predict(Xte)
-    metrics = {
-        "accuracy": round(float(accuracy_score(yte, pred)), 4),
-        "macro_f1": round(float(f1_score(yte, pred, average="macro")), 4),
-        "weighted_f1": round(float(f1_score(yte, pred, average="weighted")), 4),
-        "cv_macro_f1": leaderboard[0]["cv_score"],
-        "n_classes": len(classes),
-    }
-    per_class = classification_report(yte, pred, target_names=classes,
-                                      output_dict=True, zero_division=0)
-    print(f"    accuracy={metrics['accuracy']}  macro-F1={metrics['macro_f1']}  "
-          f"weighted-F1={metrics['weighted_f1']}")
+    metrics = {k: leaderboard[0][k] for k in ("accuracy", "macro_f1", "weighted_f1")}
+    metrics["cv_macro_f1"] = leaderboard[0]["cv_score"]
+    metrics["n_classes"] = len(classes)
+    per_class = {c: {"f1-score": per_class_by_model[best_name].get(c, 0)} for c in classes}
+    champ = joblib.load(os.path.join(all_dir, f"{best_name}.joblib"))["pipeline"]
+    print(f"    champion (best hold-out macro-F1) = {best_name}: acc {metrics['accuracy']} "
+          f"macroF1 {metrics['macro_f1']}")
 
-    print("[4/5] fit MO clusterer (unsupervised) + register")
+    print("[4/6] fit MO clusterer (unsupervised) + register")
     vec = _tfidf().fit(Xtr)
     km = MiniBatchKMeans(n_clusters=10, random_state=config.RANDOM_SEED, n_init=5)
     km.fit(vec.transform(Xtr))
-    import joblib
     joblib.dump({"vectorizer": vec, "kmeans": km, "terms": vec.get_feature_names_out()},
                 SERVING_CLUSTER)
 
     artefact = {"pipeline": champ, "classes": list(classes), "family": best_name,
                 "has_proba": hasattr(champ.named_steps["clf"], "predict_proba")}
-    cv = {"n_splits": 4, "n_candidates": len(leaderboard), "metric": "f1_macro",
+    cv = {"n_splits": 3, "n_candidates": len(leaderboard), "metric": "f1_macro",
           "mean": leaderboard[0]["cv_score"], "std": leaderboard[0]["cv_std"],
           "leaderboard": leaderboard}
     card = evaluate.model_card("nlp_crime_classifier", best_name,
@@ -208,10 +255,10 @@ def run():
     tracking.log_run({"task": "nlp_crime_classifier", "family": best_name,
                       "metrics": metrics, "cv": cv, "promotion": reg})
 
-    print("[5/5] write serving metrics")
+    print("[5/6] write serving metrics")
     _write_metrics(metrics, leaderboard, per_class, list(classes), report, reg)
-    print(f"== done ==  champion={best_name}  accuracy={metrics['accuracy']}  "
-          f"macro-F1={metrics['macro_f1']}  (v{reg['version']})")
+    print(f"[6/6] done — {len(cand)} models trained & saved | champion={best_name} "
+          f"acc={metrics['accuracy']} macro-F1={metrics['macro_f1']} (v{reg['version']})")
     return reg
 
 
