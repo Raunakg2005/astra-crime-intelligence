@@ -1,4 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-  <path d="M9 12l2 2 4-4"/>
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <path d="M24 3.5l14 4.6v10.4c0 9.4-6 16.4-14 20-8-3.6-14-10.6-14-20V8.1L24 3.5z" fill="#0b1120" stroke="url(#g)" stroke-width="2" stroke-linejoin="round"/>
+  <g stroke="url(#g)" stroke-width="1.7" stroke-linecap="round" opacity="0.95">
+    <path d="M24 14L15 24"/><path d="M24 14L33 24"/><path d="M15 24L24 33"/><path d="M33 24L24 33"/><path d="M15 24L33 24"/>
+  </g>
+  <circle cx="15" cy="24" r="2.7" fill="#38bdf8"/>
+  <circle cx="33" cy="24" r="2.7" fill="#22d3ee"/>
+  <circle cx="24" cy="33" r="3.1" fill="#f43f5e"/>
+  <path d="M24 8.5l1.7 3.6 3.9.5-2.9 2.7.8 3.9-3.5-2-3.5 2 .8-3.9-2.9-2.7 3.9-.5L24 8.5z" fill="#e0f2fe"/>
 </svg>

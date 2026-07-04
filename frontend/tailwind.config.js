@@ -4,15 +4,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        // "command center" dark palette
+        // Theme tokens driven by CSS variables (see index.css :root / .light) so the
+        // whole app flips between dark and light without touching classNames.
+        //   ink-*   = surfaces & borders   slate-* = text emphasis   white = strong text
         ink: {
-          950: "#070b14",
-          900: "#0b1120",
-          850: "#0f1729",
-          800: "#131c30",
-          700: "#1c2740",
-          600: "#293654",
+          950: "rgb(var(--ink-950) / <alpha-value>)",
+          900: "rgb(var(--ink-900) / <alpha-value>)",
+          850: "rgb(var(--ink-850) / <alpha-value>)",
+          800: "rgb(var(--ink-800) / <alpha-value>)",
+          700: "rgb(var(--ink-700) / <alpha-value>)",
+          600: "rgb(var(--ink-600) / <alpha-value>)",
         },
+        slate: {
+          100: "rgb(var(--slate-100) / <alpha-value>)",
+          200: "rgb(var(--slate-200) / <alpha-value>)",
+          300: "rgb(var(--slate-300) / <alpha-value>)",
+          400: "rgb(var(--slate-400) / <alpha-value>)",
+          500: "rgb(var(--slate-500) / <alpha-value>)",
+          600: "rgb(var(--slate-600) / <alpha-value>)",
+        },
+        white: "rgb(var(--fg) / <alpha-value>)",
         accent: {
           DEFAULT: "#38bdf8",
           cyan: "#22d3ee",

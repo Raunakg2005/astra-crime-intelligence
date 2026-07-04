@@ -6,10 +6,13 @@ import {
   Share2,
   Brain,
   ScanText,
-  ShieldCheck,
   Circle,
+  Sun,
+  Moon,
 } from "lucide-react";
+import Logo from "./Logo";
 import { api } from "../api";
+import { useTheme } from "../theme";
 
 const NAV = [
   { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
@@ -22,6 +25,7 @@ const NAV = [
 export default function Layout() {
   const [online, setOnline] = useState<boolean | null>(null);
   const [range, setRange] = useState<string>("");
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     api
@@ -38,11 +42,9 @@ export default function Layout() {
       {/* sidebar */}
       <aside className="w-64 shrink-0 border-r border-ink-700 bg-ink-900/60 flex flex-col">
         <div className="px-5 py-5 flex items-center gap-3 border-b border-ink-700">
-          <div className="grid place-items-center h-10 w-10 rounded-xl bg-accent/15 border border-accent/30">
-            <ShieldCheck className="h-5 w-5 text-accent" />
-          </div>
+          <Logo size={40} />
           <div>
-            <div className="font-extrabold tracking-tight text-white leading-none">ASTRA</div>
+            <div className="font-extrabold tracking-tight text-white leading-none text-lg">ASTRA</div>
             <div className="text-[10px] uppercase tracking-wider text-slate-400 mt-1">
               KSP Crime Intelligence
             </div>
@@ -63,7 +65,27 @@ export default function Layout() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-ink-700 space-y-2">
+        <div className="p-4 border-t border-ink-700 space-y-3">
+          {/* theme toggle */}
+          <div className="flex items-center rounded-xl bg-ink-800 border border-ink-700 p-0.5">
+            <button
+              onClick={() => theme !== "dark" && toggle()}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
+                theme === "dark" ? "bg-ink-600 text-white" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Moon className="h-3.5 w-3.5" /> Dark
+            </button>
+            <button
+              onClick={() => theme !== "light" && toggle()}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
+                theme === "light" ? "bg-ink-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Sun className="h-3.5 w-3.5" /> Light
+            </button>
+          </div>
+
           <div className="flex items-center gap-2 text-xs">
             <Circle
               className={`h-2.5 w-2.5 ${
