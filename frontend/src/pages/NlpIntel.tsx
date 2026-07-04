@@ -17,17 +17,18 @@ export default function NlpIntel() {
   const [text, setText] = useState(EXAMPLES[0]);
   const [result, setResult] = useState<NlpClassification>();
   const [busy, setBusy] = useState(false);
+  const [model, setModel] = useState("");   // "" = champion
 
   useEffect(() => {
     api.nlpModelInfo().then(setInfo);
     api.nlpClusters().then((c) => setClusters(c.clusters));
-    classify(EXAMPLES[0]);
+    classify(EXAMPLES[0], "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const classify = (t: string) => {
+  const classify = (t: string, m: string) => {
     setBusy(true);
-    api.nlpClassify(t).then(setResult).finally(() => setBusy(false));
+    api.nlpClassify(t, m || undefined).then(setResult).finally(() => setBusy(false));
   };
 
   if (!info) return <div className="p-8"><Spinner label="Loading NLP model…" /></div>;
@@ -59,7 +60,7 @@ export default function NlpIntel() {
         <Section title="Live classifier — paste a FIR narrative">
           <div className="flex flex-wrap gap-1.5 mb-3">
             {EXAMPLES.map((e, i) => (
-              <button key={i} onClick={() => { setText(e); classify(e); }}
+              <button key={i} onClick={() => { setText(e); classify(e, model); }}
                 className="text-[11px] px-2 py-1 rounded-lg bg-ink-700/60 border border-ink-600 text-slate-400 hover:text-white">
                 example {i + 1}
               </button>
@@ -72,14 +73,28 @@ export default function NlpIntel() {
             className="w-full bg-ink-800 border border-ink-600 rounded-xl p-3 text-sm text-slate-200 resize-none focus:outline-none focus:border-accent"
             placeholder="Describe the incident…"
           />
-          <button
-            onClick={() => classify(text)}
-            disabled={busy || !text.trim()}
-            className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/15 border border-accent/40 text-accent text-sm font-medium hover:bg-accent/25 disabled:opacity-50"
-          >
-            {busy ? <div className="h-4 w-4 rounded-full border-2 border-accent/40 border-t-accent animate-spin" /> : <Send className="h-4 w-4" />}
-            Classify
-          </button>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => classify(text, model)}
+              disabled={busy || !text.trim()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent/15 border border-accent/40 text-accent text-sm font-medium hover:bg-accent/25 disabled:opacity-50"
+            >
+              {busy ? <div className="h-4 w-4 rounded-full border-2 border-accent/40 border-t-accent animate-spin" /> : <Send className="h-4 w-4" />}
+              Classify
+            </button>
+            <span className="text-xs text-slate-500">with</span>
+            <select
+              value={model}
+              onChange={(e) => { setModel(e.target.value); classify(text, e.target.value); }}
+              className="bg-ink-800 border border-ink-600 rounded-lg px-2 py-1.5 text-xs text-slate-200"
+            >
+              <option value="">champion ({info.champion})</option>
+              {info.leaderboard.map((m) => (
+                <option key={m.family} value={m.family}>{m.family}</option>
+              ))}
+            </select>
+            {result?.model && <span className="text-[11px] text-slate-500">→ ran <span className="text-accent-cyan">{result.model}</span></span>}
+          </div>
 
           {result && !result.error && (
             <div className="mt-4 animate-fadeUp">
@@ -121,23 +136,36 @@ export default function NlpIntel() {
         </Section>
 
         {/* model leaderboard */}
-        <Section title="Model bake-off" right={<Cpu className="h-4 w-4 text-accent-green" />}>
-          <div className="space-y-1.5">
+        <Section
+          title={`Model bake-off (${info.leaderboard.length})`}
+          right={<Cpu className="h-4 w-4 text-accent-green" />}
+        >
+          <div className="flex items-center gap-2 px-1 mb-1 text-[10px] uppercase tracking-wide text-slate-500">
+            <span className="w-5" /><span className="w-28">model</span>
+            <span className="flex-1">macro-F1 (hold-out)</span><span className="w-9 text-right">acc</span>
+          </div>
+          <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1">
             {info.leaderboard.map((m, i) => {
-              const max = info.leaderboard[0].cv_score;
+              const score = m.macro_f1 ?? m.cv_score;
+              const max = info.leaderboard[0].macro_f1 ?? info.leaderboard[0].cv_score;
               return (
                 <div key={m.family} className="flex items-center gap-2">
                   <span className="w-5 text-[11px] font-mono text-slate-500">{i + 1}</span>
-                  <span className="w-32 text-xs text-slate-300 truncate">{m.family}</span>
+                  <span className="w-28 text-xs text-slate-300 truncate">{m.family}</span>
                   <div className="flex-1 h-2 rounded-full bg-ink-700 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${(m.cv_score / max) * 100}%`, background: i === 0 ? "#34d399" : "#38bdf8" }} />
+                    <div className="h-full rounded-full" style={{ width: `${(score / max) * 100}%`, background: i === 0 ? "#34d399" : "#38bdf8" }} />
                   </div>
-                  <span className="w-12 text-right text-[11px] font-mono text-slate-300">{m.cv_score.toFixed(3)}</span>
+                  <span className="w-10 text-right text-[11px] font-mono text-slate-300">{score.toFixed(3)}</span>
+                  <span className="w-9 text-right text-[10px] font-mono text-slate-500">
+                    {m.accuracy ? `${(m.accuracy * 100).toFixed(0)}%` : ""}
+                  </span>
                 </div>
               );
             })}
           </div>
-          <p className="text-[11px] text-slate-500 mt-3">Ranked by macro-F1 (stratified 4-fold CV). TF-IDF features.</p>
+          <p className="text-[11px] text-slate-500 mt-3">
+            {info.leaderboard.length} models trained & saved · ranked by hold-out macro-F1 · CV for selection.
+          </p>
         </Section>
       </div>
 

@@ -180,17 +180,28 @@ export interface ModelRegistry {
 
 export interface NlpClassification {
   input: string;
+  model?: string;
   predicted_head: string;
   predictions: { crime_head: string; confidence: number }[];
   entities: Record<string, string[]>;
   error?: string;
 }
 
+export interface NlpModelRow {
+  family: string;
+  cv_score: number;
+  cv_std: number;
+  accuracy?: number;
+  macro_f1?: number;
+  weighted_f1?: number;
+  has_proba?: boolean;
+}
+
 export interface NlpModelInfo {
   champion: string;
   champion_version: number;
   metrics: { accuracy: number; macro_f1: number; weighted_f1: number; cv_macro_f1: number; n_classes: number };
-  leaderboard: { family: string; cv_score: number; cv_std: number }[];
+  leaderboard: NlpModelRow[];
   classes: string[];
   per_class_f1: Record<string, number>;
   gpu: boolean;
@@ -232,8 +243,8 @@ export const api = {
   risk: () => http.get<{ districts: RiskDistrict[] }>("/api/risk").then((r) => r.data.districts),
   modelInfo: () => http.get<ModelInfo>("/api/model-info").then((r) => r.data),
   modelRegistry: () => http.get<ModelRegistry>("/api/model-registry").then((r) => r.data),
-  nlpClassify: (text: string) =>
-    http.get<NlpClassification>("/api/nlp/classify", { params: { text } }).then((r) => r.data),
+  nlpClassify: (text: string, model?: string) =>
+    http.get<NlpClassification>("/api/nlp/classify", { params: { text, model } }).then((r) => r.data),
   nlpModelInfo: () => http.get<NlpModelInfo>("/api/nlp/model-info").then((r) => r.data),
   nlpClusters: () =>
     http.get<{ clusters: MoCluster[]; n_clusters: number }>("/api/nlp/clusters").then((r) => r.data),
