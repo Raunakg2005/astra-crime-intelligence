@@ -78,6 +78,7 @@ export default function Overview() {
                 <Tooltip
                   contentStyle={{ background: "#131c30", border: "1px solid #293654", borderRadius: 12 }}
                   labelStyle={{ color: "#e2e8f0" }}
+                  itemStyle={{ color: "#38bdf8" }}
                 />
                 <Area type="monotone" dataKey="count" stroke="#38bdf8" strokeWidth={2} fill="url(#g1)" />
               </AreaChart>
@@ -120,6 +121,8 @@ export default function Overview() {
               <YAxis type="category" dataKey="name" width={140} tick={{ fill: "#94a3b8", fontSize: 10 }} />
               <Tooltip
                 contentStyle={{ background: "#131c30", border: "1px solid #293654", borderRadius: 12 }}
+                labelStyle={{ color: "#e2e8f0" }}
+                itemStyle={{ color: "#e2e8f0" }}
                 cursor={{ fill: "#1c2740" }}
               />
               <Bar dataKey="value" radius={[0, 6, 6, 0]}>

@@ -37,55 +37,86 @@ export default function NetworkPage() {
     if (!ego || !cyEl.current) return;
     cy.current?.destroy();
 
-    const nodes = ego.nodes.map((n) => ({
+    // Cap nodes for readability: the ego, its strongest co-accused, and top districts.
+    // (A prolific offender can have hundreds of co-accused — a hairball is unreadable.)
+    const egoNode = ego.nodes.filter((n) => n.kind === "ego");
+    const coAccused = ego.nodes
+      .filter((n) => n.kind === "co-accused")
+      .sort((a, b) => (b.shared_cases ?? 0) - (a.shared_cases ?? 0))
+      .slice(0, 24);
+    const districts = ego.nodes
+      .filter((n) => n.kind === "location")
+      .sort((a, b) => b.cases - a.cases)
+      .slice(0, 12);
+    const keptIds = new Set([...egoNode, ...coAccused, ...districts].map((n) => n.id));
+
+    const nodes = [...egoNode, ...coAccused, ...districts].map((n) => ({
       data: {
         id: n.id,
-        label: n.type === "district" ? n.id.replace("district:", "📍 ") : n.id,
+        label: n.type === "district" ? n.id.replace("district:", "") : n.id,
         kind: n.kind,
         cases: n.cases,
       },
     }));
-    const edges = ego.edges.map((e, i) => ({
-      data: { id: `e${i}`, source: e.source, target: e.target, weight: e.weight, label: e.label },
-    }));
+    const edges = ego.edges
+      .filter((e) => keptIds.has(e.source) && keptIds.has(e.target))
+      .map((e, i) => ({
+        data: { id: `e${i}`, source: e.source, target: e.target, weight: e.weight, label: e.label },
+      }));
 
     const c = cytoscape({
       container: cyEl.current,
+      minZoom: 0.3,
+      maxZoom: 2.5,
       elements: [...nodes, ...edges],
       style: [
         {
           selector: "node",
           style: {
             label: "data(label)",
-            color: "#cbd5e1",
-            "font-size": 9,
+            color: "#e2e8f0",
+            "font-size": 10,
+            "font-weight": 600,
+            "text-outline-color": "#0b1120",   // readable labels on dark
+            "text-outline-width": 2.2,
             "text-valign": "bottom",
             "text-margin-y": 4,
             "background-color": "#38bdf8",
-            width: (n: any) => 14 + Math.min(n.data("cases"), 40),
-            height: (n: any) => 14 + Math.min(n.data("cases"), 40),
+            "border-width": 2,
+            "border-color": "#0b1120",
+            width: (n: any) => 16 + Math.min(n.data("cases") || 1, 26),
+            height: (n: any) => 16 + Math.min(n.data("cases") || 1, 26),
           },
         },
-        { selector: 'node[kind="ego"]', style: { "background-color": "#f43f5e", "border-width": 3, "border-color": "#fb7185" } },
+        { selector: 'node[kind="ego"]', style: { "background-color": "#f43f5e", "border-color": "#fb7185", "border-width": 3, "font-size": 12, width: 46, height: 46, "z-index": 20 } },
         { selector: 'node[kind="co-accused"]', style: { "background-color": "#a78bfa" } },
-        { selector: 'node[kind="location"]', style: { "background-color": "#34d399", shape: "round-rectangle" } },
+        { selector: 'node[kind="location"]', style: { "background-color": "#34d399", shape: "round-rectangle", "font-size": 9 } },
         {
           selector: "edge",
           style: {
-            width: (e: any) => 1 + e.data("weight"),
-            "line-color": "#293654",
-            "target-arrow-color": "#293654",
-            "curve-style": "bezier",
-            opacity: 0.7,
+            width: (e: any) => 1.2 + Math.min(e.data("weight") || 1, 6),
+            "line-color": "#3b4a63",
+            "line-opacity": 0.55,
+            "curve-style": "bezier",   // undirected: co-offending is mutual (no arrowheads)
           },
         },
+        { selector: "node:selected", style: { "border-color": "#22d3ee", "border-width": 3.5 } },
       ],
-      layout: { name: "cose-bilkent", animate: false, nodeDimensionsIncludeLabels: true, idealEdgeLength: 90 } as any,
+      layout: {
+        // radial: ego at centre, co-accused in the inner ring, districts on the outer ring
+        name: "concentric",
+        concentric: (n: any) => (n.data("kind") === "ego" ? 3 : n.data("kind") === "co-accused" ? 2 : 1),
+        levelWidth: () => 1,
+        minNodeSpacing: 24,
+        padding: 26,
+        animate: false,
+      } as any,
     });
     c.on("tap", "node", (evt) => {
       const id = evt.target.id();
       if (!id.startsWith("district:") && id !== selected) setSelected(id);
     });
+    c.ready(() => c.fit(undefined, 30));
     cy.current = c;
     return () => c.destroy();
   }, [ego]);

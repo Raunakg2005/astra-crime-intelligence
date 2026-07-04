@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine,
   Cell,
 } from "recharts";
 import { AlertOctagon, Gauge, Sparkles, Cpu, Trophy, GitBranch } from "lucide-react";
@@ -111,42 +112,43 @@ export default function Predictive() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* risk scatter */}
-        <Section title="Risk landscape — volume × trend × score">
+        <Section title="Risk landscape — recent volume × momentum (bubble = risk score)">
           <ResponsiveContainer width="100%" height={330}>
-            <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: -10 }}>
-              <CartesianGrid stroke="#1c2740" />
+            <ScatterChart margin={{ top: 16, right: 24, bottom: 28, left: 8 }}>
+              <CartesianGrid stroke="#1c2740" strokeDasharray="3 3" />
               <XAxis
-                type="number"
-                dataKey="x"
-                name="Recent 30d"
-                tick={{ fill: "#64748b", fontSize: 11 }}
-                label={{ value: "Recent 30d volume", position: "insideBottom", offset: -2, fill: "#64748b", fontSize: 11 }}
+                type="number" dataKey="x" name="Recent 30d"
+                tick={{ fill: "#94a3b8", fontSize: 11 }} tickLine={{ stroke: "#293654" }} axisLine={{ stroke: "#293654" }}
+                label={{ value: "Recent 30-day FIRs →", position: "insideBottom", offset: -14, fill: "#64748b", fontSize: 11 }}
               />
               <YAxis
-                type="number"
-                dataKey="y"
-                name="Trend %"
-                tick={{ fill: "#64748b", fontSize: 11 }}
-                label={{ value: "Trend %", angle: -90, position: "insideLeft", fill: "#64748b", fontSize: 11 }}
+                type="number" dataKey="y" name="Trend %" unit="%"
+                tick={{ fill: "#94a3b8", fontSize: 11 }} tickLine={{ stroke: "#293654" }} axisLine={{ stroke: "#293654" }}
+                width={48}
+                label={{ value: "↑ trend %", angle: -90, position: "insideLeft", offset: 16, fill: "#64748b", fontSize: 11 }}
               />
-              <ZAxis type="number" dataKey="z" range={[40, 500]} />
+              <ZAxis type="number" dataKey="z" range={[40, 340]} />
+              <ReferenceLine y={0} stroke="#475569" strokeDasharray="4 4"
+                label={{ value: "flat", position: "right", fill: "#475569", fontSize: 9 }} />
               <Tooltip
-                cursor={{ strokeDasharray: "3 3" }}
-                contentStyle={{ background: "#131c30", border: "1px solid #293654", borderRadius: 12 }}
-                formatter={(v: any, n: any) => [v, n]}
-                labelFormatter={() => ""}
+                cursor={{ strokeDasharray: "3 3", stroke: "#475569" }}
                 content={({ payload }) =>
                   payload && payload[0] ? (
                     <div className="card card-pad !p-2.5 text-xs">
                       <div className="font-semibold text-white">{payload[0].payload.name}</div>
-                      <div className="text-slate-400">risk {payload[0].payload.z} · {payload[0].payload.band}</div>
+                      <div className="text-slate-400 mt-0.5">
+                        risk <b style={{ color: bandColor(payload[0].payload.band) }}>{payload[0].payload.z}</b> · {payload[0].payload.band}
+                      </div>
+                      <div className="text-slate-500 mt-0.5">
+                        {payload[0].payload.x} recent · trend {payload[0].payload.y}%
+                      </div>
                     </div>
                   ) : null
                 }
               />
               <Scatter data={scatter}>
                 {scatter.map((s, i) => (
-                  <Cell key={i} fill={bandColor(s.band)} fillOpacity={0.75} />
+                  <Cell key={i} fill={bandColor(s.band)} fillOpacity={0.72} stroke={bandColor(s.band)} strokeWidth={1} />
                 ))}
               </Scatter>
             </ScatterChart>
