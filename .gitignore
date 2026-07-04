@@ -86,3 +86,6 @@ Desktop.ini
 .vscode/
 *.swp
 *~
+
+# Claude Code / editor tooling (kept out of the repo)
+.claude/
