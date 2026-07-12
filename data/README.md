@@ -13,7 +13,7 @@ Catalyst Data Store — no code changes downstream.
 
 ```bash
 # 1. generate CSVs for every schema table (stdlib only, ~seconds)
-python generator/generate.py --cases 12000 --seed 42
+python generator/generate.py --cases 40000 --seed 42
 
 # 2. build a queryable SQLite DB (mirrors Catalyst Data Store schema)
 python build_sqlite.py
@@ -37,6 +37,12 @@ python build_sqlite.py
 | **Networks** | Co-offending "gangs" appear together → connected components / Louvain communities |
 | **Signal vs noise** | ~93% of accused are one-off/first-time; only repeat-offender pool recurs (realistic haystack) |
 | **Clearance** | Older cases more likely charge-sheeted/convicted; varies by district (socio overlay) |
+| **Anomalies** | 160 cases made multivariate outliers (implausible report delay, mass-accused, odd-hour+heinous) with **ground-truth labels** in `GroundTruthAnomalies.csv` so anomaly detection is scored with real precision/recall (not just a flag rate) |
+
+> **Note on entity resolution:** offender names are generated **globally unique** so link/network
+> analysis resolves cleanly by exact-name match. This is a *deliberate simplification* — real FIR
+> data has name variants/typos/transliteration with no shared person ID, so fuzzy entity
+> resolution is a prerequisite for real-data use (see the roadmap in the root README).
 
 ## Tables emitted (27)
 

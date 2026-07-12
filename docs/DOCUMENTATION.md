@@ -205,12 +205,21 @@ RandomizedSearch over **expanding-window time-series CV**) → F1-optimal thresh
 temporal hold-out** evaluation → **register + champion/challenger promotion** → experiment
 tracking (MLflow + JSONL) → auto model card.
 
+The **time-series CV is forward-in-time**: rows are ordered chronologically before
+`TimeSeriesSplit` so folds are expanding-window over time (not cross-district), and the hold-out
+is the most-recent weeks. Per-district high-risk thresholds and all scalers are fit on **train
+only**.
+
 **Two supervised tasks** on a district×week panel:
 - *High-risk classifier* — will a district be top-quartile next week? (families: LogReg, RF,
-  HistGBM, GBM, XGBoost-GPU). Selected by CV ROC-AUC.
+  HistGBM, GBM, XGBoost-GPU). Selected by CV ROC-AUC; benchmarked against a **persistence
+  baseline** (is this week already high-risk?).
 - *Volume regressor* — next-week FIR count (families: Ridge, RF, HistGBM, GBM, XGBoost-GPU).
-  Selected by CV MAE; reported against a naive-persistence baseline.
-- *Anomaly* — Isolation Forest (unsupervised), versioned like the others.
+  Selected by CV MAE; reported against a **correctly-specified naive-persistence baseline**
+  (`count[t]` for the `t+1` target).
+- *Anomaly* — Isolation Forest (unsupervised), scored with **real precision/recall** against the
+  generator's 160 planted ground-truth anomalies (ROC-AUC, recall@1%, precision@k), versioned
+  like the others.
 
 **Feature set** (`features.py`): lags 1–4, rolling mean/std (4/8/12 weeks), momentum,
 heinous-lag, clearance-rate-lag, district base rate, month & week-of-year seasonality (sin/cos).
@@ -264,13 +273,14 @@ figures; Census 2011 district populations). `fidelity.py` computes:
 | Check | Type | Result |
 |---|---|---|
 | District crime ↔ Census population (Spearman) | calibrated | 0.777 ✅ |
-| Women-crime composition vs NCRB (TVD) | calibrated | 0.009 ✅ |
-| Women chargesheeting vs 82.8% | calibrated | Δ0.023 ✅ |
-| Weekly momentum (lag-1 autocorrelation) | calibrated | 0.642 ✅ |
-| Co-offending modularity (Louvain Q) | emergent | 0.631 ✅ |
-| Offender concentration (Gini) | emergent | 0.496 ⚠️ (FIR-level expected lower) |
+| Women-crime composition vs NCRB (TVD) | calibrated | 0.016 ✅ |
+| Women chargesheeting vs 82.8% | calibrated | Δ0.025 ✅ |
+| Weekly momentum (lag-1 autocorrelation) | planted (AR(1)) | 0.653 ✅ |
+| Co-offending modularity (Louvain Q) | planted (gangs) | 0.596 ✅ |
+| Offender concentration (Gini) | **emergent** | 0.494 ⚠️ (diverges — FIR-level expected lower) |
 
-It **distinguishes calibrated from emergent** properties and reports divergences honestly.
+It **distinguishes calibrated/planted-signal recovery from genuinely emergent** properties (only
+offender-Gini is emergent, and it diverges) and reports divergences honestly.
 Run: `cd backend/analysis && python fidelity.py`. Full write-up in
 [FIDELITY_REPORT.md](../backend/analysis/FIDELITY_REPORT.md) and [PAPER_OUTLINE.md](PAPER_OUTLINE.md).
 
@@ -364,6 +374,17 @@ Web Hosting, the training CLI ⇄ Cron.
 **Limitations** — data is synthetic (results are not empirical crime findings); the generator
 is rule-based (several marginals hand-calibrated); offender concentration sits below the
 career-offender range; templated narratives limit NLP linguistic diversity.
+- **Entity resolution is solved by construction, not by the system.** Offender identities are
+  globally-unique exact strings, so link/community/ego analysis resolves people by exact-name
+  match. Real FIR data has spelling/transliteration/initials variants with **no shared person
+  ID**; fuzzy entity resolution (with reported precision/recall on a noisy-name mode) is required
+  before real-data use and is on the roadmap.
+- **Short-horizon forecasting barely beats persistence.** Weekly district counts are strongly
+  autocorrelated; the volume model improves on naive persistence by only ~5% MAE and the
+  high-risk classifier roughly matches it at the operating point — the model's value is in
+  probability *ranking* (ROC-AUC ≈ 0.70) and the anomaly detector, not a large accuracy lift.
+- **Fidelity is mostly calibrated/planted recovery, not discovery.** Five of six fidelity checks
+  validate properties built into the generator; only offender-Gini is emergent (and it diverges).
 
 **Ethics** — predictive policing risks bias, feedback loops and over-policing. Astra is
 decision-support, **not** automated enforcement: synthetic-only data, transparent model cards

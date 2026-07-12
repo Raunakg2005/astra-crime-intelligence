@@ -67,6 +67,20 @@ Reproduce: `cd backend/analysis && python fidelity.py`.
   concentration is below the career-offender range. → **Future work: fit SDV/CTGAN on a real
   seed and re-run the fidelity suite; add differential-privacy guarantees.**
 - No real external validity; templated narratives limit linguistic diversity.
+- **Fidelity is mostly calibrated/planted recovery, not discovery.** Five of six fidelity checks
+  validate properties built into the generator (population weighting, women-crime mix,
+  chargesheet rate, weekly AR(1) momentum, hard-coded co-offending gangs); only offender-Gini is
+  genuinely emergent — and it diverges from the real-world range. We report the distinction
+  explicitly rather than presenting planted-signal recovery as independent validation.
+- **Entity resolution is solved by construction.** Offenders have globally-unique exact-match
+  names, so link analysis never faces the real-world problem of name variants / transliteration
+  / missing shared IDs. → **Future work: noisy-name generator mode + fuzzy resolution
+  (Jaro-Winkler + age/gender corroboration) with reported resolution precision/recall.**
+- **Short-horizon forecasting barely beats persistence.** Weekly counts are strongly
+  autocorrelated; the volume model beats naive persistence by only ~5% MAE and the high-risk
+  classifier matches it at the operating point (its value is probability ranking, ROC-AUC ≈ 0.70).
+  The **anomaly detector**, by contrast, is validated against 160 planted ground-truth anomalies
+  (ROC-AUC 0.98, recall@1% 0.66) rather than a bare flag rate.
 
 ## 8. Ethics & Responsible Use (mandatory)
 - Predictive policing risks: feedback loops, bias amplification, over-policing of marginalized

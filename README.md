@@ -95,14 +95,19 @@ engineering → multi-family model selection via time-series CV → hold-out eva
 versioned model registry with champion/challenger → MLflow tracking → auto model cards →
 scheduled retraining** (`cli.py train`, mapping to Catalyst Cron).
 
-| Task | Models compared | Champion result |
-|---|---|---|
-| High-risk district (next week) | LogReg · RF · HistGBM · GBM · XGBoost-GPU | **ROC-AUC ≈ 0.70** |
-| Next-week FIR volume | Ridge · RF · HistGBM · GBM · XGBoost-GPU | **R² ≈ 0.64** (beats naive baseline) |
-| Crime-text classification | **18 classifiers** incl. MLP neural-net + XGBoost-GPU | **Accuracy ≈ 0.86 · macro-F1 ≈ 0.87** |
-| Anomaly detection | Isolation Forest | 1% flagged |
+Every model is **benchmarked against a naive baseline** (last-week persistence / majority class)
+so reported skill is honest, not inflated.
 
-GPU: XGBoost auto-uses CUDA when an NVIDIA GPU is present (falls back to CPU).
+| Task | Models compared | Champion result (vs baseline) |
+|---|---|---|
+| High-risk district (next week) | LogReg · RF · HistGBM · GBM · XGBoost-GPU | **ROC-AUC 0.70** — strong ranking, but ≈ naive persistence at the operating point (district risk is highly persistent) |
+| Next-week FIR volume | Ridge · RF · HistGBM · GBM · XGBoost-GPU | **R² 0.65** · **MAE 2.50 vs 2.63 persistence** (~5% lower) |
+| Crime-text classification | **18 classifiers** incl. MLP neural-net + XGBoost-GPU | **Accuracy ≈ 0.86 · macro-F1 ≈ 0.87** |
+| Anomaly detection | Isolation Forest, scored vs **160 planted ground-truth anomalies** | **ROC-AUC 0.98** · recall@1% **0.66** · precision@k **0.52** |
+
+GPU: XGBoost auto-uses CUDA when an NVIDIA GPU is present (falls back to CPU). Time-series CV is
+strictly forward-in-time; the anomaly detector is evaluated with real precision/recall against
+labelled planted anomalies (not just a flag rate).
 
 📊 **Full per-model performance** (all 5 tabular families + all 18 NLP models, with per-class
 F1) is in **[docs/RESULTS.md](docs/RESULTS.md)**.
@@ -114,14 +119,22 @@ Real FIR microdata is confidential, so Astra runs on a **schema-faithful synthet
 IPC/NDPS acts & sections, NCRB taxonomy). A **fidelity suite** (`backend/analysis/`) validates
 it against **real published statistics** (NCRB Crime-in-India 2022, Census 2011):
 
-| Check | Result | |
-|---|---|---|
-| District crime ↔ Census population | Spearman **0.78** | ✅ |
-| Women-crime composition vs NCRB | TVD **0.009** | ✅ |
-| Women chargesheeting vs 82.8% | Δ **0.02** | ✅ |
-| Weekly momentum autocorrelation | **0.64** | ✅ |
-| Co-offending network modularity | Q **0.63** | ✅ |
-| Offender concentration (Gini) | **0.50** | ⚠️ honestly reported |
+| Check | Result | Type | |
+|---|---|---|---|
+| District crime ↔ Census-2011 population | Spearman **0.78** | calibrated | ✅ |
+| Women-crime composition vs NCRB-2022 | TVD **0.02** | calibrated | ✅ |
+| Women chargesheeting vs 82.8% | Δ **0.03** | design choice | ✅ |
+| Weekly momentum autocorrelation | **0.65** | planted (AR(1)) | ✅ |
+| Co-offending network modularity | Q **0.60** | planted (gangs) | ✅ |
+| Offender concentration (Gini) | **0.49** | **emergent** | ⚠️ diverges — honestly reported |
+
+> **Read this before citing a number.** The first five rows are properties **calibrated or
+> planted into the generator** — agreement confirms the generator/pipeline recovers what was
+> built in, it is **not** an independent discovery about reality (the Census correlation *is*
+> against real independent population figures, but the district weights were tuned to track
+> population, so it is a calibration check). Only **offender-concentration Gini is genuinely
+> emergent** — and it is the one metric that diverges from the real-world range, which is the
+> honest result we foreground.
 
 See [`backend/analysis/FIDELITY_REPORT.md`](backend/analysis/FIDELITY_REPORT.md) and
 [`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md).
@@ -200,6 +213,9 @@ explicit non-goal of individual-level predictive policing. See the ethics sectio
 - [ ] AI copilot (QuickML LLM serving + RAG over IPC & case facts) + PDF reports (SmartBrowz)
 - [ ] Catalyst deployment config + CI/CD (Pipelines) + Auth (RBAC) + Cron/Signals alerts
 - [ ] Learned generative model (SDV/CTGAN) on a real seed, re-validated by the fidelity suite
+- [ ] **Fuzzy entity resolution** (noisy-name generator mode + rapidfuzz/Jaro-Winkler with
+      reported precision/recall) — today link analysis assumes exact-match offender identity,
+      which real FIR data (spelling/transliteration variants, no shared person ID) will not have
 
 ---
 
