@@ -10,11 +10,13 @@ real to find:
   * spatiotemporal pattern   -> certain crimes skew to night hours
   * emerging-trend alert      -> a recent spike in one district+category (last ~45 days)
   * repeat offenders / network-> a reusable offender pool, co-offending groups, stable MO
-  * anomalies                 -> a few statistically deviant cases
+  * anomalies                 -> planted deviant cases (extreme report delay / mass-accused /
+                                 odd-hour) written with ground-truth labels so the anomaly
+                                 detector can be scored with real precision/recall
   * socio-economic correlation-> district crime rate correlates with an urbanisation index
 
 Usage:
-    python generate.py --cases 12000 --seed 42 --out ../out
+    python generate.py --cases 40000 --seed 42 --out ../out
 """
 from __future__ import annotations
 
@@ -347,8 +349,12 @@ def generate(num_cases: int, seed: int, outdir: str):
     subhead_ids = list(ref.SUBHEAD_WEIGHTS.keys())
     subhead_weights = list(ref.SUBHEAD_WEIGHTS.values())
 
-    anomaly_target = max(5, num_cases // 400)
+    # planted anomalies: a small share of cases made statistically deviant on features the
+    # IsolationForest actually sees (report delay, accused count, hour). Their CaseMasterIDs +
+    # type are written to GroundTruthAnomalies.csv so detection can be scored (precision/recall).
+    anomaly_target = max(30, num_cases // 250)
     anomalies_made = 0
+    planted_anomalies = []          # (CaseMasterID, kind)
 
     for case_i in range(1, num_cases + 1):
         # --- district + week drawn from the spatiotemporal intensity field ---
@@ -366,6 +372,34 @@ def generate(num_cases: int, seed: int, outdir: str):
 
         head = ref.SUBHEAD_TO_HEAD[subhead]
 
+        # --- decide up-front whether THIS case is a planted anomaly + how it deviates. Genuine
+        #     anomalies are MULTIVARIATE outliers (weird on several axes at once); a case that is
+        #     extreme on only ONE feature barely stands out to IsolationForest. So each anomaly
+        #     has a primary deviation (its kind) and, most of the time (~70%), a secondary one —
+        #     which lifts detection to a realistic, imperfect level (recall ~0.6, not 1.0). The
+        #     deviation targets are recorded here and applied at each field below. ---
+        anomaly_kind = None
+        anom_delay_days = anom_n_accused = anom_hour = None
+        anom_heinous = False
+        if anomalies_made < anomaly_target and rng.random() < 0.006:
+            anomalies_made += 1
+            anomaly_kind = weighted_choice(rng, ["report_delay", "mass_accused", "odd_hour"], [4, 3, 3])
+            planted_anomalies.append((case_i, anomaly_kind))
+            secondary = rng.random() < 0.7
+            if anomaly_kind == "report_delay":
+                anom_delay_days = rng.randint(13, 210)          # report filed 2 wks–7 mths after the incident
+                if secondary:
+                    anom_n_accused = rng.randint(7, 16)
+            elif anomaly_kind == "mass_accused":
+                anom_n_accused = rng.randint(9, 20)             # far outside the usual 1–4
+                if secondary:
+                    anom_delay_days = rng.randint(8, 125)
+            else:  # odd_hour
+                anom_hour = rng.choice([1, 2, 3, 4])            # deep pre-dawn + flagged heinous
+                anom_heinous = True
+                if secondary:
+                    anom_n_accused = rng.randint(7, 14)
+
         # --- category (mostly FIR) ---
         if subhead in (103,) and rng.random() < 0.4:
             category = 3  # UDR for some homicide-adjacent
@@ -373,7 +407,9 @@ def generate(num_cases: int, seed: int, outdir: str):
             category = weighted_choice(rng, [1, 3, 4, 8], [0.86, 0.06, 0.05, 0.03])
 
         # --- gravity ---
-        if subhead in ref.HEINOUS_SUBHEADS:
+        if anom_heinous:
+            gravity = 1                          # anomaly: heinous gravity on an otherwise ordinary case
+        elif subhead in ref.HEINOUS_SUBHEADS:
             gravity = 1
         elif subhead in (104, 202, 203, 601, 301):
             gravity = 3
@@ -395,15 +431,22 @@ def generate(num_cases: int, seed: int, outdir: str):
             lat, lng = jitter_point(rng, d_lat, d_lng, d_span * 0.5)
 
         # --- time of day (night bias for certain crimes) ---
-        if subhead in ref.NIGHT_SUBHEADS:
+        if anom_hour is not None:
+            hour = anom_hour                        # anomaly: deep pre-dawn, unusual for most crimes
+        elif subhead in ref.NIGHT_SUBHEADS:
             hour = weighted_choice(rng, list(range(24)),
                                    [3,3,3,2,2,1,1,1,1,1,1,1,1,2,2,2,3,4,6,8,9,9,7,5])
         else:
             hour = weighted_choice(rng, list(range(24)),
                                    [1,1,1,1,1,1,2,3,5,7,8,8,7,6,6,6,6,6,6,5,4,3,2,1])
-        incident_from = reg_date.replace(hour=hour, minute=rng.randint(0, 59)) - timedelta(hours=rng.randint(0, 8))
+        # odd-hour anomalies keep the incident AT that hour (no back-dating) so the stored hour is deep-night
+        back_h = 0 if anom_hour is not None else rng.randint(0, 8)
+        incident_from = reg_date.replace(hour=hour, minute=rng.randint(0, 59)) - timedelta(hours=back_h)
         incident_to = incident_from + timedelta(minutes=rng.randint(5, 240))
-        info_recv = incident_to + timedelta(hours=rng.randint(0, 20))
+        if anom_delay_days is not None:
+            info_recv = incident_to + timedelta(days=anom_delay_days)   # implausibly delayed report
+        else:
+            info_recv = incident_to + timedelta(hours=rng.randint(0, 20))
 
         # --- status (older cases more likely resolved) ---
         age_days = (END - reg_date).days
@@ -462,6 +505,8 @@ def generate(num_cases: int, seed: int, outdir: str):
         # This gives link-analysis a real signal-vs-noise problem to solve.
         case_accused_ids = []
         n_accused = weighted_choice(rng, [1, 2, 3, 4], [62, 24, 10, 4])
+        if anom_n_accused is not None:
+            n_accused = anom_n_accused              # anomaly: mass-accused spike, far outside the usual 1–4
         # A case involves the known-offender network ~38% of the time; organised
         # (gang/property/NDPS) crimes lean higher, opportunistic crimes lower.
         p_known = 0.82 if subhead in (201, 202, 203, 205, 206, 701, 704, 601) else 0.6
@@ -532,9 +577,10 @@ def generate(num_cases: int, seed: int, outdir: str):
             cs_w.writerow([cs_id, case_i, cs_date.strftime("%Y-%m-%d %H:%M:%S"), cstype, io_id])
             cs_id += 1
 
-        # --- inject anomalies ---
-        if anomalies_made < anomaly_target and rng.random() < 0.003:
-            anomalies_made += 1
+    # --- anomaly ground truth (not a schema table; consumed only by the anomaly evaluator) ---
+    gt_w = w.table("GroundTruthAnomalies", ["CaseMasterID", "AnomalyType"])
+    for cid, kind in planted_anomalies:
+        gt_w.writerow([cid, kind])
 
     w.close()
     return {
@@ -544,6 +590,7 @@ def generate(num_cases: int, seed: int, outdir: str):
         "offenders": OFFENDER_POOL,
         "gangs": len(gangs),
         "spike": f"subhead {SPIKE_SUBHEAD} in district {SPIKE_DISTRICT}, last 45 days",
+        "planted_anomalies": len(planted_anomalies),
     }
 
 
@@ -594,7 +641,7 @@ def make_brief(rng, subhead, district_name):
 
 def main():
     p = argparse.ArgumentParser(description="Generate synthetic KSP FIR dataset.")
-    p.add_argument("--cases", type=int, default=12000, help="number of FIR cases")
+    p.add_argument("--cases", type=int, default=40000, help="number of FIR cases")
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "out"))
     args = p.parse_args()

@@ -49,14 +49,17 @@ def regressor_metrics(y_true, pred, baseline=None) -> dict:
     return {k: round(float(v), 4) for k, v in out.items()}
 
 
-def model_card(task, family, params, metrics, cv, data_report, features, extra="") -> str:
+def model_card(task, family, params, metrics, cv, data_report, features, extra="",
+               metrics_heading="Hold-out metrics (most recent weeks, never seen in training/CV)",
+               selection=None) -> str:
+    sel = selection or (f"{cv.get('n_splits','?')}-fold expanding-window time-series CV over "
+                        f"{cv.get('n_candidates','?')} candidates")
     lines = [
         f"# Model Card — {task}", "",
-        f"**Family:** `{family}`  ", f"**Selected via:** {cv.get('n_splits','?')}-fold expanding-window "
-        f"time-series CV over {cv.get('n_candidates','?')} candidates  ",
+        f"**Family:** `{family}`  ", f"**Selected via:** {sel}  ",
         f"**Data:** {data_report['n_cases']:,} FIRs · {data_report['n_districts']} districts · "
         f"{data_report['date_from']} → {data_report['date_to']} · fingerprint `{data_report['data_fingerprint']}`  ",
-        "", "## Hold-out metrics (most recent weeks, never seen in training/CV)",
+        "", f"## {metrics_heading}",
     ]
     for k, v in metrics.items():
         lines.append(f"- **{k}**: {v}")

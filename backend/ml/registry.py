@@ -66,9 +66,11 @@ def register(task: str, artefact: dict, metadata: dict, card: str,
 
     challenger_score = metadata["metrics"][primary_metric]
     champ = champion(task)
-    champ_score = champ["metrics"][primary_metric] if champ else None
+    # champ may predate this primary metric (evaluation criterion changed) -> .get, and if the
+    # champion can't be scored on the current metric, the challenger defines the new bar → promote.
+    champ_score = champ["metrics"].get(primary_metric) if champ else None
 
-    promote = (champ is None or
+    promote = (champ is None or champ_score is None or
                (challenger_score > champ_score if higher_is_better else challenger_score < champ_score))
 
     if promote:

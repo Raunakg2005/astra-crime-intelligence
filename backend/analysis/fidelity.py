@@ -18,7 +18,7 @@ Metrics
                                     offender stylized range.                      [emergent]
 5. Temporal autocorrelation      : lag-1 autocorr of the weekly series (tests the
                                     injected momentum is realistic).             [calibrated]
-6. Co-offending modularity       : Louvain modularity of the offender network.   [emergent]
+6. Co-offending modularity       : Louvain modularity of the offender network.   [planted]
 
 Run:  cd backend/analysis && python fidelity.py
 Writes: fidelity_report.json and FIDELITY_REPORT.md
@@ -170,7 +170,7 @@ def eval_network_modularity(accused):
     Q = community_louvain.modularity(part, G, weight="weight")
     return {
         "metric": "co-offending network modularity (Louvain Q)",
-        "kind": "emergent (co-offending gangs)",
+        "kind": "planted (hard-coded disjoint co-offending gangs)",
         "modularity_Q": round(float(Q), 3),
         "n_nodes": G.number_of_nodes(),
         "n_communities": len(set(part.values())),
@@ -232,11 +232,14 @@ def _write_markdown(report):
         L.append(f"| {r['metric']} | {r.get('kind','')} | {key}={r.get(key)} | "
                  f"{r.get('target','')} | **{r.get('verdict','')}** |")
     gini_r = next((r for r in report["results"] if "gini" in r), {})
-    L += ["", "## Calibrated vs emergent (read this before citing any number)", "",
-          "Population–crime correlation, women-crime composition, women chargesheeting rate, "
-          "and weekly momentum were **calibrated** to published NCRB-2022 / Census-2011 figures — "
-          "their agreement confirms the calibration worked, it is not an independent discovery. "
-          "Network modularity and offender concentration are **emergent** (not directly imposed).",
+    L += ["", "## Calibrated / planted vs emergent (read this before citing any number)", "",
+          "Population–crime correlation, women-crime composition, and women chargesheeting rate were "
+          "**calibrated** to published NCRB-2022 / Census-2011 figures, and weekly momentum "
+          "(AR(1)) and co-offending modularity (hard-coded disjoint gangs) are **planted** structure "
+          "the pipeline merely recovers — for all five, agreement confirms the generator/pipeline "
+          "works, it is **not** an independent discovery about reality. Only **offender concentration "
+          "(Gini)** is genuinely *emergent* (not directly imposed) — and it is the one metric that "
+          "diverges from the real-world range, which is the honest result to foreground.",
           "", "## Honest limitation to state in the paper", "",
           f"Offender concentration (Gini = {gini_r.get('gini')}) is *moderate* and sits just "
           "below the classic career-offender range (0.55–0.80). This is expected at the FIR level "

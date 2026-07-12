@@ -9,11 +9,19 @@ Run:  python -m ml.cli train        (or: python pipeline.py)
 """
 from __future__ import annotations
 
+import csv as _csv
+import os
 import warnings
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    f1_score,
+    roc_auc_score,
+)
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 
 import config
@@ -73,6 +81,13 @@ def train_classifier(train, holdout, data_report):
     metrics["operating_threshold"] = round(thr, 3)
     metrics["cv_roc_auc"] = round(cv_score, 4)
 
+    # naive persistence baseline: predict "high-risk next week" iff the CURRENT week is already
+    # at/above the district high-risk threshold — the honest bar the trained model must beat.
+    base_pred = (holdout["count"].to_numpy()
+                 >= holdout["DistrictID"].map(thresholds).to_numpy()).astype(int)
+    metrics["baseline_persistence_f1"] = round(float(f1_score(yho, base_pred, zero_division=0)), 4)
+    metrics["baseline_persistence_accuracy"] = round(float(accuracy_score(yho, base_pred)), 4)
+
     artefact = {"model": est, "features": config.RISK_FEATURES, "thresholds": thresholds,
                 "operating_threshold": thr, "family": family}
     card = evaluate.model_card("risk_classifier", family, params, metrics, cv, data_report,
@@ -98,13 +113,16 @@ def train_regressor(train, holdout, data_report):
         models.regressor_candidates(), Xtr, ytr, "neg_mean_absolute_error")
 
     pred = np.clip(est.predict(Xho), 0, None)
-    metrics = evaluate.regressor_metrics(yho, pred, baseline=holdout["lag1"])
+    # naive persistence baseline for a t+1 forecast = the CURRENT (last completed) week's count,
+    # i.e. holdout["count"] (count[t]) — NOT lag1 (=count[t-1], which is two weeks before the
+    # target and understates the baseline, inflating the apparent skill).
+    metrics = evaluate.regressor_metrics(yho, pred, baseline=holdout["count"])
     metrics["cv_mae"] = round(-cv_score, 4)
 
     artefact = {"model": est, "features": config.RISK_FEATURES, "family": family}
     card = evaluate.model_card("risk_regressor", family, params, metrics, cv, data_report,
                                config.RISK_FEATURES,
-                               extra="Baseline = last-week value (naive persistence).")
+                               extra="Baseline = last completed week's count (naive persistence, count[t] for the t+1 target).")
     meta = {"family": family, "params": params, "metrics": metrics, "cv": cv,
             "data": data_report, "n_train": int(len(train)), "n_holdout": int(len(holdout))}
     tracking.mlflow_log_run("regressor", {"family": family, **params}, metrics, {"family": family})
@@ -115,6 +133,16 @@ def train_regressor(train, holdout, data_report):
     print(f"    -> best={family}  holdout MAE={metrics['mae']} (baseline {metrics['baseline_mae']})  "
           f"R2={metrics['r2']}  promoted={reg['promoted']} (v{reg['version']})")
     return reg, metrics
+
+
+def _load_anomaly_ground_truth() -> set:
+    """Planted-anomaly CaseMasterIDs written by the generator (GroundTruthAnomalies.csv),
+    used to score the detector with real precision/recall. Empty set if absent."""
+    path = os.path.join(os.path.dirname(data.db.db_path()), "GroundTruthAnomalies.csv")
+    if not os.path.exists(path):
+        return set()
+    with open(path, newline="", encoding="utf-8") as f:
+        return {int(r["CaseMasterID"]) for r in _csv.DictReader(f)}
 
 
 def train_anomaly(cases, data_report):
@@ -132,19 +160,59 @@ def train_anomaly(cases, data_report):
     X = df[feats].fillna(0)
 
     model = IsolationForest(contamination=0.01, n_estimators=300, random_state=config.RANDOM_SEED).fit(X)
-    flagged = int((model.predict(X) == -1).sum())
+    pred = model.predict(X)                 # -1 = flagged
+    score = -model.score_samples(X)         # higher = more anomalous
+    flagged = int((pred == -1).sum())
     metrics = {"n_cases": int(len(df)), "flagged": flagged,
                "flagged_pct": round(100 * flagged / len(df), 3)}
+
+    # ---- score the detector against the generator's planted ground truth ----
+    gt = _load_anomaly_ground_truth()
+    if gt:
+        y_true = df["CaseMasterID"].isin(gt).to_numpy().astype(int)
+        n_pos = int(y_true.sum())
+        if n_pos > 0:
+            flag_mask = (pred == -1)
+            tp = int((flag_mask & (y_true == 1)).sum())
+            order = np.argsort(-score)
+            topk = order[:n_pos]                                       # flag exactly n_planted by score
+            metrics.update({
+                "n_planted": n_pos,
+                "roc_auc": round(float(roc_auc_score(y_true, score)), 4),
+                "avg_precision": round(float(average_precision_score(y_true, score)), 4),
+                "recall_at_contamination": round(tp / n_pos, 4),
+                "precision_at_contamination": round(tp / max(1, flagged), 4),
+                "precision_at_k": round(float(y_true[topk].sum() / n_pos), 4),
+            })
+    has_gt = "roc_auc" in metrics
+    primary = "roc_auc" if has_gt else "flagged_pct"
+
     artefact = {"model": model, "features": feats}
-    card = evaluate.model_card("anomaly", "IsolationForest", {"contamination": 0.01, "n_estimators": 300},
-                               metrics, {"n_splits": 0, "n_candidates": 1, "mean": None, "std": None},
-                               data_report, feats, extra="Unsupervised; contamination=1%.")
+    extra = ("Unsupervised IsolationForest (contamination=1%). Scored against "
+             f"{metrics.get('n_planted', 0)} generator-planted ground-truth anomalies: "
+             "ROC-AUC / average-precision are threshold-free; recall/precision are at the 1% "
+             "flag cut; precision@k flags exactly the number planted."
+             if has_gt else
+             "Unsupervised; contamination=1%. No ground-truth labels present → only the flag "
+             "RATE is reported (a design target, not a validated detection metric).")
+    card = evaluate.model_card(
+        "anomaly", "IsolationForest", {"contamination": 0.01, "n_estimators": 300},
+        metrics, {"n_splits": 0, "n_candidates": 1, "mean": None, "std": None},
+        data_report, feats, extra=extra,
+        metrics_heading=("Detection metrics vs planted ground-truth anomalies" if has_gt
+                         else "Flag rate (no ground truth available)"),
+        selection="Unsupervised IsolationForest over the full case table (no train/CV split)")
     meta = {"family": "IsolationForest", "params": {"contamination": 0.01}, "metrics": metrics,
             "cv": {}, "data": data_report}
     tracking.mlflow_log_run("anomaly", {"family": "IsolationForest"}, metrics, {"family": "IsolationForest"})
-    reg = registry.register("anomaly", artefact, meta, card, "flagged_pct", higher_is_better=True)
+    reg = registry.register("anomaly", artefact, meta, card, primary, higher_is_better=True)
     tracking.log_run({"task": "anomaly", "metrics": metrics, "promotion": reg})
-    print(f"    -> flagged {flagged}/{len(df)}  (v{reg['version']})")
+    if has_gt:
+        print(f"    -> flagged {flagged}/{len(df)}  planted={metrics['n_planted']}  "
+              f"ROC-AUC={metrics['roc_auc']}  recall@1%={metrics['recall_at_contamination']}  "
+              f"P@k={metrics['precision_at_k']}  (v{reg['version']})")
+    else:
+        print(f"    -> flagged {flagged}/{len(df)}  (no ground truth)  (v{reg['version']})")
     return reg, metrics
 
 
@@ -163,6 +231,10 @@ def run():
     panel = F.build_panel(cases)
     frame = F.training_frame(panel)
     train, holdout = _temporal_split(frame)
+    # order rows chronologically so TimeSeriesSplit folds are genuinely forward-in-time.
+    # (build_panel sorts by (DistrictID, week); left unsorted, TimeSeriesSplit would fold by
+    # DISTRICT block, not by time — a cross-district split masquerading as a temporal one.)
+    train = train.sort_values(["week_idx", "DistrictID"]).reset_index(drop=True)
     print(f"    panel {len(frame)} rows · train {len(train)} / hold-out {len(holdout)} "
           f"({panel['week_idx'].nunique()} weeks, {frame['DistrictID'].nunique()} districts)")
 
@@ -188,12 +260,18 @@ def _write_serving_metrics(report, clf_m, reg_m, an_m, clf_reg, reg_reg):
                            "precision": clf_m["precision"], "recall": clf_m["recall"],
                            "accuracy": clf_m["accuracy"], "pr_auc": clf_m["pr_auc"],
                            "cv_roc_auc": clf_m.get("cv_roc_auc"),
+                           "baseline_persistence_f1": clf_m.get("baseline_persistence_f1"),
                            "positive_rate_test": clf_m["positive_rate"]},
-            "regressor": {"mae": reg_m["mae"], "baseline_mae_lag1": reg_m["baseline_mae"],
+            "regressor": {"mae": reg_m["mae"], "baseline_mae_persistence": reg_m["baseline_mae"],
+                          "skill_vs_baseline_pct": reg_m.get("skill_vs_baseline_pct"),
                           "r2": reg_m["r2"], "rmse": reg_m["rmse"]},
             "champion_versions": {"classifier": clf_reg["version"], "regressor": reg_reg["version"]},
         },
-        "anomaly": {"n_cases": an_m["n_cases"], "flagged": an_m["flagged"]},
+        "anomaly": {"n_cases": an_m["n_cases"], "flagged": an_m["flagged"],
+                    "n_planted": an_m.get("n_planted"), "roc_auc": an_m.get("roc_auc"),
+                    "avg_precision": an_m.get("avg_precision"),
+                    "recall_at_contamination": an_m.get("recall_at_contamination"),
+                    "precision_at_k": an_m.get("precision_at_k")},
         "data_rows": report["n_cases"], "data_fingerprint": report["data_fingerprint"],
         "families": {"classifier": clf_reg, "regressor": reg_reg},
     }
