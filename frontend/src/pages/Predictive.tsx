@@ -90,9 +90,13 @@ export default function Predictive() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Metric label="Risk ROC-AUC" value={model.risk.classifier.roc_auc} good />
             <Metric label="Precision" value={model.risk.classifier.precision} />
-            <Metric label="Forecast MAE" value={model.risk.regressor.mae} sub={`vs ${model.risk.regressor.baseline_mae_lag1} baseline`} good />
+            <Metric label="Forecast MAE" value={model.risk.regressor.mae} sub={`vs ${model.risk.regressor.baseline_mae_persistence} persistence`} good />
             <Metric label="Forecast R²" value={model.risk.regressor.r2} good />
-            <Metric label="Anomalies" value={model.anomaly?.flagged ?? "—"} sub={`/ ${model.anomaly?.n_cases?.toLocaleString() ?? ""}`} />
+            {model.anomaly?.roc_auc != null ? (
+              <Metric label="Anomaly ROC-AUC" value={model.anomaly.roc_auc} sub={`recall ${model.anomaly.recall_at_contamination} @1%`} good />
+            ) : (
+              <Metric label="Anomalies" value={model.anomaly?.flagged ?? "—"} sub={`/ ${model.anomaly?.n_cases?.toLocaleString() ?? ""}`} />
+            )}
           </div>
           {clf?.cv?.leaderboard && (
             <div className="mt-3 flex items-center gap-2 flex-wrap">

@@ -167,12 +167,15 @@ export interface ModelInfo {
   trained?: boolean;
   risk?: {
     classifier: { roc_auc: number; f1: number; precision: number; recall: number; accuracy: number };
-    regressor: { mae: number; baseline_mae_lag1: number; r2: number };
+    regressor: { mae: number; baseline_mae_persistence: number; skill_vs_baseline_pct?: number; r2: number; rmse?: number };
     n_train_rows: number;
     n_test_rows: number;
     feature_importance: Record<string, number>;
   };
-  anomaly?: { n_cases: number; flagged: number };
+  anomaly?: {
+    n_cases: number; flagged: number; n_planted?: number; roc_auc?: number;
+    avg_precision?: number; recall_at_contamination?: number; precision_at_k?: number;
+  };
 }
 
 export interface ModelRegistry {
