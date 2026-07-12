@@ -5,14 +5,14 @@
 **Data:** 40,000 FIRs · 31 districts · 2022-07-01 → 2026-06-30 · fingerprint `d9c60dedd4f21558`  
 
 ## Hold-out metrics (most recent weeks, never seen in training/CV)
-- **accuracy**: 0.8594
-- **macro_f1**: 0.8814
-- **weighted_f1**: 0.8638
-- **cv_macro_f1**: 0.876
+- **accuracy**: 0.8562
+- **macro_f1**: 0.878
+- **weighted_f1**: 0.86
+- **cv_macro_f1**: 0.8785
 - **n_classes**: 8
 
 ## Cross-validation
-- mean f1_macro: 0.8760 ± 0.0013
+- mean f1_macro: 0.8785 ± 0.0012
 
 ## Best hyperparameters
 ```json

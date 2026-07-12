@@ -1,12 +1,12 @@
 {
   "version": 1,
   "metrics": {
-    "accuracy": 0.8594,
-    "macro_f1": 0.8814,
-    "weighted_f1": 0.8638,
-    "cv_macro_f1": 0.876,
+    "accuracy": 0.8562,
+    "macro_f1": 0.878,
+    "weighted_f1": 0.86,
+    "cv_macro_f1": 0.8785,
     "n_classes": 8
   },
-  "promoted_at": "2026-07-03T06:50:54.818952+00:00",
+  "promoted_at": "2026-07-12T09:30:00.701064+00:00",
   "primary_metric": "macro_f1"
 }

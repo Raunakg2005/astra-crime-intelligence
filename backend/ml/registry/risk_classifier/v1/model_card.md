@@ -5,23 +5,25 @@
 **Data:** 40,000 FIRs · 31 districts · 2022-07-01 → 2026-06-30 · fingerprint `d9c60dedd4f21558`  
 
 ## Hold-out metrics (most recent weeks, never seen in training/CV)
-- **roc_auc**: 0.7018
-- **pr_auc**: 0.4269
-- **f1**: 0.4968
-- **precision**: 0.3974
-- **recall**: 0.6623
-- **accuracy**: 0.6552
-- **positive_rate**: 0.257
+- **roc_auc**: 0.699
+- **pr_auc**: 0.4141
+- **f1**: 0.4922
+- **precision**: 0.3816
+- **recall**: 0.693
+- **accuracy**: 0.6374
+- **positive_rate**: 0.2536
 - **operating_threshold**: 0.475
-- **cv_roc_auc**: 0.6148
+- **cv_roc_auc**: 0.6428
+- **baseline_persistence_f1**: 0.5118
+- **baseline_persistence_accuracy**: 0.7475
 
 ## Cross-validation
-- mean roc_auc: 0.6148 ± 0.0000
+- mean roc_auc: 0.6428 ± 0.0000
 
 ## Best hyperparameters
 ```json
 {
-  "model__C": 0.3
+  "model__C": 3.0
 }
 ```
 
