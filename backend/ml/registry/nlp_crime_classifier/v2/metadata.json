@@ -1,0 +1,232 @@
+{
+  "family": "mlp",
+  "metrics": {
+    "accuracy": 0.8562,
+    "macro_f1": 0.878,
+    "weighted_f1": 0.86,
+    "cv_macro_f1": 0.8785,
+    "n_classes": 8
+  },
+  "cv": {
+    "n_splits": 3,
+    "n_candidates": 18,
+    "metric": "f1_macro",
+    "mean": 0.8785,
+    "std": 0.0012,
+    "leaderboard": [
+      {
+        "family": "mlp",
+        "cv_score": 0.8785,
+        "cv_std": 0.0012,
+        "accuracy": 0.8562,
+        "macro_f1": 0.878,
+        "weighted_f1": 0.86,
+        "has_proba": true
+      },
+      {
+        "family": "nearest_centroid",
+        "cv_score": 0.876,
+        "cv_std": 0.0025,
+        "accuracy": 0.852,
+        "macro_f1": 0.8766,
+        "weighted_f1": 0.8567,
+        "has_proba": false
+      },
+      {
+        "family": "ridge",
+        "cv_score": 0.8707,
+        "cv_std": 0.0018,
+        "accuracy": 0.8542,
+        "macro_f1": 0.875,
+        "weighted_f1": 0.8572,
+        "has_proba": false
+      },
+      {
+        "family": "multinomial_nb",
+        "cv_score": 0.8734,
+        "cv_std": 0.0027,
+        "accuracy": 0.8542,
+        "macro_f1": 0.8747,
+        "weighted_f1": 0.8571,
+        "has_proba": true
+      },
+      {
+        "family": "logreg",
+        "cv_score": 0.8679,
+        "cv_std": 0.0018,
+        "accuracy": 0.8502,
+        "macro_f1": 0.8692,
+        "weighted_f1": 0.8521,
+        "has_proba": true
+      },
+      {
+        "family": "sgd_logloss",
+        "cv_score": 0.8617,
+        "cv_std": 0.0024,
+        "accuracy": 0.8482,
+        "macro_f1": 0.8668,
+        "weighted_f1": 0.8503,
+        "has_proba": true
+      },
+      {
+        "family": "linear_svc",
+        "cv_score": 0.8603,
+        "cv_std": 0.0024,
+        "accuracy": 0.8475,
+        "macro_f1": 0.8634,
+        "weighted_f1": 0.8486,
+        "has_proba": false
+      },
+      {
+        "family": "bernoulli_nb",
+        "cv_score": 0.8538,
+        "cv_std": 0.0044,
+        "accuracy": 0.824,
+        "macro_f1": 0.8548,
+        "weighted_f1": 0.845,
+        "has_proba": true
+      },
+      {
+        "family": "decision_tree",
+        "cv_score": 0.8615,
+        "cv_std": 0.0068,
+        "accuracy": 0.843,
+        "macro_f1": 0.8525,
+        "weighted_f1": 0.8436,
+        "has_proba": true
+      },
+      {
+        "family": "complement_nb",
+        "cv_score": 0.8479,
+        "cv_std": 0.0062,
+        "accuracy": 0.8265,
+        "macro_f1": 0.8502,
+        "weighted_f1": 0.8396,
+        "has_proba": true
+      },
+      {
+        "family": "knn",
+        "cv_score": 0.8431,
+        "cv_std": 0.0015,
+        "accuracy": 0.8375,
+        "macro_f1": 0.8437,
+        "weighted_f1": 0.8376,
+        "has_proba": true
+      },
+      {
+        "family": "random_forest",
+        "cv_score": 0.8448,
+        "cv_std": 0.0011,
+        "accuracy": 0.8371,
+        "macro_f1": 0.8424,
+        "weighted_f1": 0.837,
+        "has_proba": true
+      },
+      {
+        "family": "extra_trees",
+        "cv_score": 0.8435,
+        "cv_std": 0.0013,
+        "accuracy": 0.8365,
+        "macro_f1": 0.8405,
+        "weighted_f1": 0.8367,
+        "has_proba": true
+      },
+      {
+        "family": "bagging",
+        "cv_score": 0.8392,
+        "cv_std": 0.0018,
+        "accuracy": 0.835,
+        "macro_f1": 0.8363,
+        "weighted_f1": 0.8347,
+        "has_proba": true
+      },
+      {
+        "family": "passive_aggressive",
+        "cv_score": 0.8347,
+        "cv_std": 0.0084,
+        "accuracy": 0.8349,
+        "macro_f1": 0.836,
+        "weighted_f1": 0.8356,
+        "has_proba": false
+      },
+      {
+        "family": "xgboost",
+        "cv_score": 0.8349,
+        "cv_std": 0.0007,
+        "accuracy": 0.8355,
+        "macro_f1": 0.8353,
+        "weighted_f1": 0.8352,
+        "has_proba": true
+      },
+      {
+        "family": "hist_gbm",
+        "cv_score": 0.8367,
+        "cv_std": 0.0065,
+        "accuracy": 0.8247,
+        "macro_f1": 0.8271,
+        "weighted_f1": 0.8239,
+        "has_proba": true
+      },
+      {
+        "family": "adaboost",
+        "cv_score": 0.3567,
+        "cv_std": 0.0291,
+        "accuracy": 0.492,
+        "macro_f1": 0.3916,
+        "weighted_f1": 0.4458,
+        "has_proba": true
+      }
+    ]
+  },
+  "data": {
+    "n_cases": 40000,
+    "n_districts": 31,
+    "date_from": "2022-07-01",
+    "date_to": "2026-06-30",
+    "span_days": 1460,
+    "warnings": [],
+    "data_fingerprint": "d9c60dedd4f21558"
+  },
+  "per_class": {
+    "Crimes Against Body": {
+      "f1-score": 0.866
+    },
+    "Crimes Against Children": {
+      "f1-score": 0.931
+    },
+    "Crimes Against Property": {
+      "f1-score": 0.821
+    },
+    "Crimes Against Public Order & Safety": {
+      "f1-score": 0.881
+    },
+    "Crimes Against Women": {
+      "f1-score": 0.878
+    },
+    "Cyber Crimes": {
+      "f1-score": 0.881
+    },
+    "Economic Offences": {
+      "f1-score": 0.878
+    },
+    "Offences Against State / Special Laws": {
+      "f1-score": 0.889
+    }
+  },
+  "classes": [
+    "Crimes Against Body",
+    "Crimes Against Children",
+    "Crimes Against Property",
+    "Crimes Against Public Order & Safety",
+    "Crimes Against Women",
+    "Cyber Crimes",
+    "Economic Offences",
+    "Offences Against State / Special Laws"
+  ],
+  "n_train": 32000,
+  "n_holdout": 8000,
+  "task": "nlp_crime_classifier",
+  "version": 2,
+  "registered_at": "2026-07-17T11:48:15.687287+00:00",
+  "primary_metric": "macro_f1"
+}

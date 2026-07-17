@@ -1,0 +1,22 @@
+1. Activate the virtual environment (already created, Python 3.12 — needed since system default 3.14 breaks pandas):
+source .venv/bin/activate
+
+2. Generate the synthetic dataset (skip if data/out/ksp.db already exists):
+python data/generator/generate.py --cases 40000 --seed 42
+python data/build_sqlite.py
+
+3. Train all models (skip if already trained):
+cd backend/ml
+python cli.py train-all
+cd ../..
+
+4. Start the API (terminal A, from repo root):
+cd backend/appsail_ml
+python -m uvicorn app:app --port 8000
+Docs at http://127.0.0.1:8000/docs
+
+5. Start the dashboard (terminal B, from repo root):
+cd frontend
+npm install    # first time only
+npm run dev
+Open http://localhost:5173
