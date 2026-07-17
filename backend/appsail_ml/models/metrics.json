@@ -19,8 +19,8 @@
       "rmse": 3.4857
     },
     "champion_versions": {
-      "classifier": 1,
-      "regressor": 1
+      "classifier": 3,
+      "regressor": 3
     }
   },
   "anomaly": {
@@ -37,18 +37,18 @@
   "families": {
     "classifier": {
       "task": "risk_classifier",
-      "version": 1,
-      "promoted": true,
+      "version": 3,
+      "promoted": false,
       "challenger_metric": 0.699,
-      "champion_metric": null,
+      "champion_metric": 0.699,
       "primary_metric": "roc_auc"
     },
     "regressor": {
       "task": "risk_regressor",
-      "version": 1,
-      "promoted": true,
+      "version": 3,
+      "promoted": false,
       "challenger_metric": 2.4955,
-      "champion_metric": null,
+      "champion_metric": 2.4955,
       "primary_metric": "mae"
     }
   }

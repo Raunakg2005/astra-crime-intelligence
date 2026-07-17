@@ -6,6 +6,7 @@ import {
   Share2,
   Brain,
   ScanText,
+  MessageCircle,
   Circle,
   Sun,
   Moon,
@@ -20,6 +21,7 @@ const NAV = [
   { to: "/network", label: "Link Analysis", icon: Share2 },
   { to: "/predictive", label: "Predictive AI", icon: Brain },
   { to: "/nlp", label: "NLP Text AI", icon: ScanText },
+  { to: "/chat", label: "Assistant", icon: MessageCircle },
 ];
 
 export default function Layout() {

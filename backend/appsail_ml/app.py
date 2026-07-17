@@ -16,9 +16,11 @@ import sys
 import urllib.parse
 import urllib.request
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from pydantic import BaseModel
+import uuid
 
 import analytics as A
 import db
@@ -26,6 +28,10 @@ import db
 _ML_DIR = os.path.join(os.path.dirname(__file__), "..", "ml")
 if _ML_DIR not in sys.path:
     sys.path.insert(0, _ML_DIR)
+
+_REPO_ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 app = FastAPI(
     title="KSP Crime Intelligence API",
@@ -250,6 +256,51 @@ def nlp_all_models():
 def nlp_clusters():
     """Unsupervised modus-operandi clusters over the narratives."""
     return A.nlp_mo_clusters()
+
+
+_chatbot = None
+
+
+def _get_chatbot():
+    """Lazily construct the chatbot so a missing/bad GROQ_API_KEY only breaks
+    /api/chat, not the whole analytics API."""
+    global _chatbot
+    if _chatbot is None:
+        from chatbot.setup import ChatBot
+
+        _chatbot = ChatBot()
+    return _chatbot
+
+
+class ChatRequest(BaseModel):
+    message: str
+    thread_id: str | None = None
+
+
+class ChatResponse(BaseModel):
+    response: str
+    thread_id: str
+
+
+@app.post("/api/chat", tags=["chat"])
+def chat(req: ChatRequest) -> ChatResponse:
+    """Talk to the Astra analytics assistant (LangGraph agent over Groq, with
+    tools onto this same API). Pass back the returned thread_id on subsequent
+    calls to keep conversation memory within a session."""
+    if not req.message.strip():
+        raise HTTPException(400, "message must not be empty")
+    try:
+        bot = _get_chatbot()
+    except Exception as e:
+        raise HTTPException(503, f"Chatbot unavailable: {e}") from e
+
+    thread_id = req.thread_id or str(uuid.uuid4())
+    result = bot.agent.invoke(
+        {"messages": [{"role": "user", "content": req.message}]},
+        config={"configurable": {"thread_id": thread_id}},
+    )
+    reply = result["messages"][-1].content
+    return ChatResponse(response=reply, thread_id=thread_id)
 
 
 @app.get("/", tags=["overview"])

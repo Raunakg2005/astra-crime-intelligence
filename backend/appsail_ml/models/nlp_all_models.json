@@ -16,11 +16,11 @@
       "accuracy": 0.852,
       "macro_f1": 0.8766,
       "weighted_f1": 0.8567,
-      "has_proba": true
+      "has_proba": false
     },
     {
       "family": "ridge",
-      "cv_score": 0.8708,
+      "cv_score": 0.8707,
       "cv_std": 0.0018,
       "accuracy": 0.8542,
       "macro_f1": 0.875,
@@ -74,11 +74,11 @@
     },
     {
       "family": "decision_tree",
-      "cv_score": 0.8616,
-      "cv_std": 0.0067,
-      "accuracy": 0.8421,
-      "macro_f1": 0.8545,
-      "weighted_f1": 0.8428,
+      "cv_score": 0.8615,
+      "cv_std": 0.0068,
+      "accuracy": 0.843,
+      "macro_f1": 0.8525,
+      "weighted_f1": 0.8436,
       "has_proba": true
     },
     {
@@ -92,47 +92,38 @@
     },
     {
       "family": "knn",
-      "cv_score": 0.8427,
-      "cv_std": 0.0022,
+      "cv_score": 0.8431,
+      "cv_std": 0.0015,
+      "accuracy": 0.8375,
+      "macro_f1": 0.8437,
+      "weighted_f1": 0.8376,
+      "has_proba": true
+    },
+    {
+      "family": "random_forest",
+      "cv_score": 0.8448,
+      "cv_std": 0.0011,
       "accuracy": 0.8371,
-      "macro_f1": 0.8412,
-      "weighted_f1": 0.8372,
+      "macro_f1": 0.8424,
+      "weighted_f1": 0.837,
       "has_proba": true
     },
     {
       "family": "extra_trees",
       "cv_score": 0.8435,
       "cv_std": 0.0013,
-      "accuracy": 0.8369,
-      "macro_f1": 0.8408,
-      "weighted_f1": 0.8371,
-      "has_proba": true
-    },
-    {
-      "family": "random_forest",
-      "cv_score": 0.8449,
-      "cv_std": 0.0014,
-      "accuracy": 0.8367,
+      "accuracy": 0.8365,
       "macro_f1": 0.8405,
-      "weighted_f1": 0.8366,
+      "weighted_f1": 0.8367,
       "has_proba": true
     },
     {
-      "family": "hist_gbm",
-      "cv_score": 0.8407,
-      "cv_std": 0.0031,
-      "accuracy": 0.837,
-      "macro_f1": 0.8397,
-      "weighted_f1": 0.8369,
-      "has_proba": true
-    },
-    {
-      "family": "xgboost",
-      "cv_score": 0.8359,
-      "cv_std": 0.0007,
-      "accuracy": 0.8359,
-      "macro_f1": 0.8381,
-      "weighted_f1": 0.8356,
+      "family": "bagging",
+      "cv_score": 0.8392,
+      "cv_std": 0.0018,
+      "accuracy": 0.835,
+      "macro_f1": 0.8363,
+      "weighted_f1": 0.8347,
       "has_proba": true
     },
     {
@@ -145,21 +136,30 @@
       "has_proba": false
     },
     {
-      "family": "bagging",
-      "cv_score": 0.8393,
-      "cv_std": 0.0016,
-      "accuracy": 0.8347,
-      "macro_f1": 0.8356,
-      "weighted_f1": 0.8345,
+      "family": "xgboost",
+      "cv_score": 0.8349,
+      "cv_std": 0.0007,
+      "accuracy": 0.8355,
+      "macro_f1": 0.8353,
+      "weighted_f1": 0.8352,
+      "has_proba": true
+    },
+    {
+      "family": "hist_gbm",
+      "cv_score": 0.8367,
+      "cv_std": 0.0065,
+      "accuracy": 0.8247,
+      "macro_f1": 0.8271,
+      "weighted_f1": 0.8239,
       "has_proba": true
     },
     {
       "family": "adaboost",
-      "cv_score": 0.797,
-      "cv_std": 0.0021,
-      "accuracy": 0.7953,
-      "macro_f1": 0.8008,
-      "weighted_f1": 0.794,
+      "cv_score": 0.3567,
+      "cv_std": 0.0291,
+      "accuracy": 0.492,
+      "macro_f1": 0.3916,
+      "weighted_f1": 0.4458,
       "has_proba": true
     }
   ],
@@ -207,10 +207,10 @@
     "linear_svc": {
       "Crimes Against Body": 0.834,
       "Crimes Against Children": 0.927,
-      "Crimes Against Property": 0.834,
+      "Crimes Against Property": 0.835,
       "Crimes Against Public Order & Safety": 0.862,
       "Crimes Against Women": 0.844,
-      "Cyber Crimes": 0.869,
+      "Cyber Crimes": 0.868,
       "Economic Offences": 0.856,
       "Offences Against State / Special Laws": 0.88
     },
@@ -255,32 +255,32 @@
       "Offences Against State / Special Laws": 0.889
     },
     "knn": {
-      "Crimes Against Body": 0.808,
-      "Crimes Against Children": 0.867,
-      "Crimes Against Property": 0.846,
-      "Crimes Against Public Order & Safety": 0.834,
-      "Crimes Against Women": 0.833,
-      "Cyber Crimes": 0.841,
-      "Economic Offences": 0.845,
-      "Offences Against State / Special Laws": 0.855
+      "Crimes Against Body": 0.811,
+      "Crimes Against Children": 0.887,
+      "Crimes Against Property": 0.844,
+      "Crimes Against Public Order & Safety": 0.833,
+      "Crimes Against Women": 0.834,
+      "Cyber Crimes": 0.842,
+      "Economic Offences": 0.843,
+      "Offences Against State / Special Laws": 0.853
     },
     "decision_tree": {
-      "Crimes Against Body": 0.813,
-      "Crimes Against Children": 0.906,
-      "Crimes Against Property": 0.836,
-      "Crimes Against Public Order & Safety": 0.856,
-      "Crimes Against Women": 0.847,
-      "Cyber Crimes": 0.846,
+      "Crimes Against Body": 0.818,
+      "Crimes Against Children": 0.886,
+      "Crimes Against Property": 0.837,
+      "Crimes Against Public Order & Safety": 0.855,
+      "Crimes Against Women": 0.848,
+      "Cyber Crimes": 0.844,
       "Economic Offences": 0.863,
       "Offences Against State / Special Laws": 0.869
     },
     "random_forest": {
-      "Crimes Against Body": 0.822,
-      "Crimes Against Children": 0.89,
-      "Crimes Against Property": 0.847,
-      "Crimes Against Public Order & Safety": 0.832,
-      "Crimes Against Women": 0.829,
-      "Cyber Crimes": 0.836,
+      "Crimes Against Body": 0.824,
+      "Crimes Against Children": 0.903,
+      "Crimes Against Property": 0.846,
+      "Crimes Against Public Order & Safety": 0.834,
+      "Crimes Against Women": 0.831,
+      "Cyber Crimes": 0.833,
       "Economic Offences": 0.838,
       "Offences Against State / Special Laws": 0.83
     },
@@ -290,38 +290,38 @@
       "Crimes Against Property": 0.847,
       "Crimes Against Public Order & Safety": 0.827,
       "Crimes Against Women": 0.835,
-      "Cyber Crimes": 0.841,
-      "Economic Offences": 0.853,
+      "Cyber Crimes": 0.84,
+      "Economic Offences": 0.852,
       "Offences Against State / Special Laws": 0.856
     },
     "bagging": {
-      "Crimes Against Body": 0.821,
-      "Crimes Against Children": 0.875,
+      "Crimes Against Body": 0.823,
+      "Crimes Against Children": 0.878,
       "Crimes Against Property": 0.85,
-      "Crimes Against Public Order & Safety": 0.826,
-      "Crimes Against Women": 0.826,
-      "Cyber Crimes": 0.827,
-      "Economic Offences": 0.831,
-      "Offences Against State / Special Laws": 0.83
+      "Crimes Against Public Order & Safety": 0.825,
+      "Crimes Against Women": 0.823,
+      "Cyber Crimes": 0.828,
+      "Economic Offences": 0.832,
+      "Offences Against State / Special Laws": 0.832
     },
     "adaboost": {
-      "Crimes Against Body": 0.81,
-      "Crimes Against Children": 0.884,
-      "Crimes Against Property": 0.81,
-      "Crimes Against Public Order & Safety": 0.852,
-      "Crimes Against Women": 0.731,
-      "Cyber Crimes": 0.728,
-      "Economic Offences": 0.792,
-      "Offences Against State / Special Laws": 0.8
+      "Crimes Against Body": 0.577,
+      "Crimes Against Children": 0.84,
+      "Crimes Against Property": 0.723,
+      "Crimes Against Public Order & Safety": 0.408,
+      "Crimes Against Women": 0.262,
+      "Cyber Crimes": 0.303,
+      "Economic Offences": 0.003,
+      "Offences Against State / Special Laws": 0.017
     },
     "hist_gbm": {
-      "Crimes Against Body": 0.833,
+      "Crimes Against Body": 0.834,
       "Crimes Against Children": 0.867,
-      "Crimes Against Property": 0.84,
-      "Crimes Against Public Order & Safety": 0.852,
+      "Crimes Against Property": 0.822,
+      "Crimes Against Public Order & Safety": 0.851,
       "Crimes Against Women": 0.836,
-      "Cyber Crimes": 0.822,
-      "Economic Offences": 0.817,
+      "Cyber Crimes": 0.718,
+      "Economic Offences": 0.84,
       "Offences Against State / Special Laws": 0.849
     },
     "mlp": {
@@ -335,14 +335,14 @@
       "Offences Against State / Special Laws": 0.889
     },
     "xgboost": {
-      "Crimes Against Body": 0.83,
-      "Crimes Against Children": 0.887,
-      "Crimes Against Property": 0.846,
-      "Crimes Against Public Order & Safety": 0.827,
-      "Crimes Against Women": 0.831,
-      "Cyber Crimes": 0.822,
-      "Economic Offences": 0.835,
-      "Offences Against State / Special Laws": 0.826
+      "Crimes Against Body": 0.822,
+      "Crimes Against Children": 0.871,
+      "Crimes Against Property": 0.851,
+      "Crimes Against Public Order & Safety": 0.828,
+      "Crimes Against Women": 0.828,
+      "Cyber Crimes": 0.828,
+      "Economic Offences": 0.829,
+      "Offences Against State / Special Laws": 0.824
     }
   },
   "classes": [

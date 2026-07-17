@@ -244,6 +244,11 @@ export interface TimeSeries {
   by_head: Record<string, number>;
 }
 
+export interface ChatResponse {
+  response: string;
+  thread_id: string;
+}
+
 // ---- api calls ----
 export const api = {
   kpis: () => http.get<Kpis>("/api/kpis").then((r) => r.data),
@@ -274,6 +279,8 @@ export const api = {
   nlpModelInfo: () => http.get<NlpModelInfo>("/api/nlp/model-info").then((r) => r.data),
   nlpClusters: () =>
     http.get<{ clusters: MoCluster[]; n_clusters: number }>("/api/nlp/clusters").then((r) => r.data),
+  chat: (message: string, thread_id?: string) =>
+    http.post<ChatResponse>("/api/chat", { message, thread_id }).then((r) => r.data),
 };
 
 // crime-head -> colour (consistent across views)

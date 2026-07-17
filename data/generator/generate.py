@@ -27,7 +27,7 @@ import os
 import random
 from datetime import datetime, timedelta
 
-import reference as ref
+import data.generator.reference as ref
 
 
 # ---------------------------------------------------------------------------
