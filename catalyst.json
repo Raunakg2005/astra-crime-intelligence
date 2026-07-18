@@ -1,0 +1,22 @@
+{
+  "project_name": "astra-crime-intel",
+  "client": {
+    "source": "frontend/dist"
+  },
+  "appsail": [
+    {
+      "source": ".",
+      "name": "astra-backend",
+      "ignore": [
+        ".git",
+        ".github",
+        ".venv",
+        "frontend",
+        "backend/tests",
+        "backend/ml",
+        "backend/appsail_ml/models/nlp_all",
+        "data/out/*.csv"
+      ]
+    }
+  ]
+}

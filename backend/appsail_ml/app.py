@@ -22,16 +22,19 @@ from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
 import uuid
 
+# Put this dir (flat imports: analytics, db), backend/ml (models, tracking) and the repo root
+# (the chatbot package) on sys.path BEFORE importing them — so the app boots both locally
+# (CWD = this dir) AND when launched as "backend.appsail_ml.app:app" from the repo root on
+# Catalyst AppSail, where none of these are otherwise importable.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+for _p in (_HERE, os.path.join(_HERE, "..", "ml"), os.path.join(_HERE, "..", "..")):
+    _p = os.path.abspath(_p)
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+_ML_DIR = os.path.abspath(os.path.join(_HERE, "..", "ml"))   # referenced by /api/model-registry
+
 import analytics as A
 import db
-
-_ML_DIR = os.path.join(os.path.dirname(__file__), "..", "ml")
-if _ML_DIR not in sys.path:
-    sys.path.insert(0, _ML_DIR)
-
-_REPO_ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
 
 app = FastAPI(
     title="KSP Crime Intelligence API",
