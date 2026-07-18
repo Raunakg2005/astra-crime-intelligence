@@ -11,10 +11,11 @@
         ".git",
         ".github",
         ".venv",
-        "frontend/node_modules",
-        "frontend/src",
-        "frontend/public",
-        "backend/tests"
+        "frontend",
+        "backend/tests",
+        "backend/ml",
+        "backend/appsail_ml/models/nlp_all",
+        "data/out/*.csv"
       ]
     }
   ]
