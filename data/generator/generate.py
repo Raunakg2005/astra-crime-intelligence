@@ -27,7 +27,10 @@ import os
 import random
 from datetime import datetime, timedelta
 
-import data.generator.reference as ref
+try:
+    import reference as ref                       # standalone (dir on path) + pytest fixture
+except ModuleNotFoundError:                        # imported as data.generator.generate from repo root
+    from data.generator import reference as ref
 
 
 # ---------------------------------------------------------------------------
