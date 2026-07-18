@@ -16,7 +16,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
@@ -24,6 +24,7 @@ import uuid
 
 import analytics as A
 import db
+from catalyst_logger import log_user_action
 
 _ML_DIR = os.path.join(os.path.dirname(__file__), "..", "ml")
 if _ML_DIR not in sys.path:
@@ -127,21 +128,25 @@ def geocode(q: str = Query(..., min_length=2, description="place / village / are
 
 @app.get("/api/hotspots", tags=["geospatial"])
 def get_hotspots(
+    request: Request,
     district_id: int | None = Query(None),
     crime_head: str | None = Query(None),
     days: int | None = Query(None, description="restrict to last N days"),
     eps_m: int = Query(450, description="DBSCAN neighbourhood radius (metres)"),
     min_samples: int = Query(15),
 ):
+    log_user_action(request, "Hotspots Query", f"district: {district_id}, head: {crime_head}, days: {days}")
     return A.hotspots(district_id, crime_head, days, eps_m, min_samples)
 
 
 @app.get("/api/trends", tags=["overview"])
 def get_trends(
+    request: Request,
     window_days: int = Query(45),
     z_threshold: float = Query(2.0),
 ):
     """Emerging-trend / red-zone alerts (z-score vs rolling baseline)."""
+    log_user_action(request, "Emerging Trends Query", f"window_days: {window_days}")
     return {"alerts": A.emerging_trends(window_days=window_days, z_threshold=z_threshold)}
 
 
@@ -171,13 +176,15 @@ def get_ego(name: str):
 
 
 @app.get("/api/anomalies", tags=["ai"])
-def get_anomalies(contamination: float = Query(0.01), top: int = Query(30)):
+def get_anomalies(request: Request, contamination: float = Query(0.01), top: int = Query(30)):
+    log_user_action(request, "Anomaly Detection Query", f"contamination: {contamination}")
     return A.anomalies(contamination=contamination, top=top)
 
 
 @app.get("/api/risk", tags=["ai"])
-def get_risk():
+def get_risk(request: Request):
     """Predictive district risk scores (trained GradientBoosting / Zia AutoML)."""
+    log_user_action(request, "Risk Scores Query")
     return {"districts": A.risk_scores()}
 
 
@@ -283,10 +290,11 @@ class ChatResponse(BaseModel):
 
 
 @app.post("/api/chat", tags=["chat"])
-def chat(req: ChatRequest) -> ChatResponse:
+def chat(req: ChatRequest, request: Request) -> ChatResponse:
     """Talk to the Astra analytics assistant (LangGraph agent over Groq, with
     tools onto this same API). Pass back the returned thread_id on subsequent
     calls to keep conversation memory within a session."""
+    log_user_action(request, "AI Copilot Chat", f"message_length: {len(req.message)}")
     if not req.message.strip():
         raise HTTPException(400, "message must not be empty")
     try:

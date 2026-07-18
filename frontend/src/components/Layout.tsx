@@ -24,9 +24,16 @@ const NAV = [
   { to: "/chat", label: "Assistant", icon: MessageCircle },
 ];
 
+declare global {
+  interface Window {
+    catalyst?: any;
+  }
+}
+
 export default function Layout() {
   const [online, setOnline] = useState<boolean | null>(null);
   const [range, setRange] = useState<string>("");
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const { theme, toggle } = useTheme();
 
   useEffect(() => {
@@ -37,6 +44,28 @@ export default function Layout() {
         setRange(`${k.data_from} → ${k.data_to}`);
       })
       .catch(() => setOnline(false));
+
+    if (window.catalyst) {
+      try {
+        window.catalyst.init();
+        window.catalyst.auth.isUserAuthenticated()
+          .then((res: any) => {
+            if (res && res.user) {
+              setUser({
+                name: `${res.user.first_name || ""} ${res.user.last_name || ""}`.trim() || "Inspector",
+                email: res.user.email_address || "",
+              });
+            }
+          })
+          .catch(() => {
+            setUser({ name: "Officer (Local Dev)", email: "local.dev@ksp.gov.in" });
+          });
+      } catch (e) {
+        setUser({ name: "Officer (Offline)", email: "offline@ksp.gov.in" });
+      }
+    } else {
+      setUser({ name: "Officer (Local Dev)", email: "local.dev@ksp.gov.in" });
+    }
   }, []);
 
   return (
@@ -68,6 +97,29 @@ export default function Layout() {
         </nav>
 
         <div className="p-4 border-t border-ink-700 space-y-3">
+          {/* User profile card */}
+          {user && (
+            <div className="flex flex-col p-2.5 rounded-xl bg-ink-800 border border-ink-700 gap-1.5">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 shrink-0 rounded-full bg-sky-500 text-ink-900 flex items-center justify-center font-bold text-xs">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="overflow-hidden">
+                  <div className="text-xs font-semibold text-white truncate">{user.name}</div>
+                  <div className="text-[9px] text-slate-400 truncate">{user.email}</div>
+                </div>
+              </div>
+              {window.catalyst && window.catalyst.auth && (
+                <button
+                  onClick={() => window.catalyst.auth.signOut("/")}
+                  className="w-full text-center py-1 rounded-lg text-[10px] bg-ink-700 hover:bg-ink-600 text-slate-300 font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              )}
+            </div>
+          )}
+
           {/* theme toggle */}
           <div className="flex items-center rounded-xl bg-ink-800 border border-ink-700 p-0.5">
             <button

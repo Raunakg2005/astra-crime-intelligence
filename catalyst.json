@@ -13,7 +13,7 @@
         ".venv",
         "frontend",
         "backend/tests",
-        "backend/ml",
+        "backend/ml/mlruns",
         "backend/appsail_ml/models/nlp_all",
         "data/out/*.csv"
       ]
