@@ -1,9 +1,8 @@
 <div align="center">
 
-# 🛡️ Astra — AI-Driven Crime Analytics & Intelligence Platform
+# 🛡️ Astra — Agentic AI Crime Analytics & Intelligence Platform
 
-**Turning the Karnataka State Police FIR database into geospatial hotspot intelligence,
-criminal-network link analysis, and AI-driven predictive dashboards — deployed 100% on Zoho Catalyst.**
+**Turning the Karnataka State Police FIR database into an AI-powered crime intelligence platform featuring geospatial hotspot detection, criminal-network analysis, predictive analytics, and an Agentic AI copilot — deployed 100% on Zoho Catalyst.**
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
@@ -11,6 +10,10 @@ criminal-network link analysis, and AI-driven predictive dashboards — deployed
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white)
 ![XGBoost](https://img.shields.io/badge/XGBoost-GPU-EB5E28)
 ![MLflow](https://img.shields.io/badge/MLflow-tracking-0194E2?logo=mlflow&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-Agent-1C3C3C)
+![LangGraph](https://img.shields.io/badge/LangGraph-Memory-blue)
+![Groq](https://img.shields.io/badge/Groq-LLM-black)
+![Qwen3-32B](https://img.shields.io/badge/Qwen3-32B-green)
 ![Zoho Catalyst](https://img.shields.io/badge/Deploy-Zoho%20Catalyst-E42527)
 ![CI](https://github.com/Raunakg2005/astra-crime-intelligence/actions/workflows/ci.yml/badge.svg)
 
@@ -36,35 +39,103 @@ a **strategic intelligence hub**.
 | 🕸️ | **Link & Network Analysis** | Co-offending graph, repeat-offender profiles across jurisdictions, **Louvain** community detection to surface organised networks & recurring MO |
 | 🧠 | **Predictive Intelligence** | Trained **crime-forecasting** models (next-week high-risk districts + volume) with proper time-series validation; socio-economic overlays |
 | 🚨 | **Anomaly Radar** | **Isolation Forest** flags cases deviating from behavioural norms for investigators to link |
-| 📝 | **NLP Crime-Text AI** | Classify crime type from the free-text FIR narrative (**18-model bake-off**), entity extraction, modus-operandi clustering |
+| 🤖 | AI Crime Intelligence Copilot | Agentic AI assistant powered by LangChain + Qwen3-32B that answers natural-language questions by orchestrating live analytics APIs, predictive models, hotspot detection, offender network analysis, and NLP classification. |
+| 📝 | NLP Crime-Text AI | Champion NLP model for FIR narrative classification (18-model benchmark), accessible directly through the AI Copilot or dashboard interface. |
 | 📈 | **Trend & Pattern Discovery** | Temporal decomposition, seasonality, emerging-typology alerts |
 
 ## Dashboard
 
-A dark "command-center" SPA with five views — **Overview** (KPIs + red-zone alerts),
-**Geospatial** (MapLibre map), **Link Analysis** (Cytoscape graphs), **Predictive AI**
-(risk landscape + model card), and **NLP Text AI** (live classifier + model leaderboard).
+A dark command-center SPA featuring Overview, Geospatial Intelligence, Link Analysis,
+Predictive AI, NLP Text AI, and an integrated AI Crime Intelligence Copilot.
+
+The copilot enables analysts to query the platform conversationally
+(e.g. "Which districts are predicted high-risk next week?" or
+"Show repeat offenders connected to X") while automatically orchestrating
+multiple analytics services before generating a grounded response.
 
 ---
 
-## Architecture
+## 🤖 AI Crime Intelligence Copilot
 
+Astra includes an Agentic AI assistant that enables analysts to
+interact with the platform using natural language.
+
+Unlike conventional chatbots, the assistant never answers analytical
+questions from the language model's internal knowledge.
+
+Instead it:
+
+• Understands the user's intent.
+
+• Chooses the required analytics tools.
+
+• Executes backend API calls.
+
+• Combines multiple tool outputs.
+
+• Produces grounded responses.
+
+Supported capabilities include:
+
+- Crime statistics
+
+- Trend analysis
+
+- District comparison
+
+- Crime hotspots
+
+- Repeat offenders
+
+- Criminal networks
+
+- Predictive district risk
+
+- FIR narrative classification
+
+
+
+## Architecture
 ```mermaid
 flowchart LR
+
     subgraph Data["Data Layer"]
-      GEN["Synthetic FIR generator<br/>(27-table schema, seed-controlled)"] --> DB[("SQLite / Catalyst Data Store")]
+        GEN["Synthetic FIR Generator<br/>(27-table schema, seed-controlled)"]
+        DB[("SQLite / Catalyst Data Store")]
+        GEN --> DB
     end
-    subgraph ML["ML / MLOps  (backend/ml)"]
-      DB --> FE["Feature engineering"]
-      FE --> PIPE["Model selection · time-series CV<br/>registry · MLflow · champion/challenger"]
-      PIPE --> REG[("Model registry<br/>+ served champions")]
+
+    subgraph ML["ML & Analytics Pipeline (backend/ml)"]
+        FE["Feature Engineering"]
+        TRAIN["Training & Time-Series CV"]
+        REG[("Model Registry<br/>MLflow Champions")]
+        DB --> FE
+        FE --> TRAIN
+        TRAIN --> REG
     end
-    subgraph API["Analytics API  (Catalyst AppSail)"]
-      DB --> SVC["FastAPI service"]
-      REG --> SVC
+
+    subgraph API["Analytics Backend (FastAPI / Catalyst AppSail)"]
+        SVC["Crime Intelligence API"]
+        DB --> SVC
+        REG --> SVC
     end
-    subgraph UI["Dashboard  (Catalyst Web Hosting)"]
-      SVC -->|/api| SPA["React + Vite SPA"]
+
+    subgraph Agent["AI Crime Intelligence Copilot"]
+        LLM["LangChain Agent<br/>Groq • Qwen3-32B"]
+        TOOLS["Tool Orchestration"]
+        MEM["Conversation Memory<br/>(LangGraph)"]
+
+        LLM --> TOOLS
+        MEM --> LLM
+        TOOLS --> SVC
+    end
+
+    subgraph UI["Frontend (React + Vite)"]
+        DASH["Dashboard"]
+        CHAT["AI Copilot"]
+
+        DASH --> SVC
+        CHAT --> LLM
     end
 ```
 
@@ -77,11 +148,11 @@ Catalyst service.
 |---|---|---|
 | Frontend SPA | React + Vite + TS, Tailwind | Web Client Hosting |
 | Maps · charts · graph | MapLibre GL · Recharts · Cytoscape | — |
-| API / backend | Node serverless | Serverless Functions + API Gateway |
 | Analytics / ML | Python (FastAPI) | AppSail |
 | Relational DB | FIR schema (27 tables) | Data Store |
-| Predictive risk | tabular forecasting | Zia AutoML |
-| NLP / RAG | crime-text + copilot | QuickML · Zia Text Analytics |
+| AI Copilot | LangChain + LangGraph + Groq (Qwen3-32B) | AppSail |
+| Predictive Analytics | Scikit-learn + XGBoost + MLflow | AppSail |
+| NLP Classification | Champion NLP model (18-model benchmark) | AppSail |
 | Auth (RBAC) · Cache · Storage | | Authentication · Cache · Stratus |
 | Scheduled retraining · alerts | | Cron · Signals · Mail/Push |
 | CI/CD | | Pipelines |
@@ -94,6 +165,23 @@ Not one-shot fitting — a real pipeline (`backend/ml/`): **data validation → 
 engineering → multi-family model selection via time-series CV → hold-out evaluation →
 versioned model registry with champion/challenger → MLflow tracking → auto model cards →
 scheduled retraining** (`cli.py train`, mapping to Catalyst Cron).
+
+### Agentic AI Layer
+
+Astra includes an Agentic AI assistant built using LangChain and Groq-hosted Qwen3-32B.
+
+Unlike conventional chatbots, the assistant never answers analytical
+questions from the language model's internal knowledge.
+
+Instead, it automatically selects and invokes backend analytics tools
+(KPIs, hotspot detection, predictive risk, offender networks, trend
+analysis, and FIR classification), combines their outputs, and generates
+grounded responses for police analysts.
+
+The AI Crime Intelligence Copilot grounds every factual response through
+backend analytics tools rather than relying solely on the language model's
+internal knowledge, reducing hallucinated statistics while preserving
+human oversight.
 
 Every model is **benchmarked against a naive baseline** (last-week persistence / majority class)
 so reported skill is honest, not inflated.
@@ -195,6 +283,7 @@ backend/
   appsail_ml/       FastAPI analytics service (hotspots, network, forecast, NLP, anomaly)
   analysis/         fidelity evaluation vs real published statistics
   tests/            pytest suite (generator, sqlite, analytics, features, nlp, api)
+chatbot/
 frontend/           React + Vite + Tailwind dashboard (5 pages)
 .github/workflows/  CI (lint + tests + frontend build)
 docs/               DOCUMENTATION.md · SETUP.md · RESULTS.md · PAPER_OUTLINE.md
@@ -210,7 +299,6 @@ explicit non-goal of individual-level predictive policing. See the ethics sectio
 
 ## Roadmap
 
-- [ ] AI copilot (QuickML LLM serving + RAG over IPC & case facts) + PDF reports (SmartBrowz)
 - [ ] Catalyst deployment config + CI/CD (Pipelines) + Auth (RBAC) + Cron/Signals alerts
 - [ ] Learned generative model (SDV/CTGAN) on a real seed, re-validated by the fidelity suite
 - [ ] **Fuzzy entity resolution** (noisy-name generator mode + rapidfuzz/Jaro-Winkler with
