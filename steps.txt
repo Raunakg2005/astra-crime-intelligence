@@ -1,22 +1,59 @@
-1. Activate the virtual environment (already created, Python 3.12 — needed since system default 3.14 breaks pandas):
-source .venv/bin/activate
+## Windows Setup (PowerShell)
 
-2. Generate the synthetic dataset (skip if data/out/ksp.db already exists):
-python data/generator/generate.py --cases 40000 --seed 42
-python data/build_sqlite.py
+### 1. Create and activate the virtual environment (Python 3.12)
 
-3. Train all models (skip if already trained):
-cd backend/ml
+# Create the virtual environment (first time only)
+py -3.12 -m venv .venv
+
+# Activate it
+.\.venv\Scripts\Activate.ps1
+
+# If PowerShell blocks activation, run:
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
+
+
+### 2. Install Python dependencies (first time only)
+
+pip install -r requirements.txt
+
+
+### 3. Generate the synthetic dataset
+# (Skip if data\out\ksp.db already exists)
+
+python data\generator\generate.py --cases 40000 --seed 42
+python data\build_sqlite.py
+
+
+### 4. Train all models
+# (Skip if already trained)
+
+cd backend\ml
 python cli.py train-all
-cd ../..
+cd ..\..
 
-4. Start the API (terminal A, from repo root):
-cd backend/appsail_ml
+
+### 5. Start the API
+# Open a new PowerShell window (Terminal A)
+
+.\.venv\Scripts\Activate.ps1
+cd backend\appsail_ml
 python -m uvicorn app:app --port 8000
-Docs at http://127.0.0.1:8000/docs
 
-5. Start the dashboard (terminal B, from repo root):
+API Documentation:
+http://127.0.0.1:8000/docs
+
+
+### 6. Start the Dashboard
+# Open another PowerShell window (Terminal B)
+
 cd frontend
-npm install    # first time only
+
+# First time only
+npm install
+
+# Start the development server
 npm run dev
-Open http://localhost:5173
+
+Dashboard:
+http://localhost:5173
