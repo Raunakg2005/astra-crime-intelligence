@@ -40,9 +40,12 @@ app = FastAPI(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)   # compress large GeoJSON responses
+# CORS: permissive "*" for local dev; in production set ASTRA_CORS_ORIGINS to the Catalyst
+# web-client origin(s) (comma-separated) to lock the API down to the dashboard only.
+_cors_origins = [o.strip() for o in os.getenv("ASTRA_CORS_ORIGINS", "*").split(",") if o.strip()] or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # tighten to the Catalyst web-client origin in prod
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
