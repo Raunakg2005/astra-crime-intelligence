@@ -1,0 +1,21 @@
+{
+  "project_name": "astra-crime-intel",
+  "client": {
+    "source": "frontend/dist"
+  },
+  "appsail": [
+    {
+      "source": ".",
+      "name": "astra-backend",
+      "ignore": [
+        ".git",
+        ".github",
+        ".venv",
+        "frontend/node_modules",
+        "frontend/src",
+        "frontend/public",
+        "backend/tests"
+      ]
+    }
+  ]
+}
