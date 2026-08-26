@@ -3,7 +3,9 @@ from dataclasses import dataclass
 
 @dataclass
 class ChatBotConfig:
-    model_name: str = "llama-3.3-70b-versatile"   # Groq flagship w/ strong tool-calling (qwen3-32b is not available on this key)
+    model_name: str = "openai/gpt-oss-120b"   # Groq: rock-solid tool-calling. llama-3.3-70b intermittently
+                                               # emits malformed `<function=.../>` tool calls → Groq 400
+                                               # tool_use_failed; gpt-oss-120b benchmarked 6/6 clean. (qwen3-32b 404s on this key.)
     requests_per_minute: int = 60
     max_requests_per_day: int = 1000
     tokens_per_minute: int = 6000

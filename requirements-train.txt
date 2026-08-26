@@ -1,0 +1,10 @@
+# Training / analysis dependencies — everything in requirements.txt PLUS the heavy libraries
+# needed only to (re)train models and run the fidelity/analysis suite. These are deliberately
+# NOT installed on the serving runtime (Catalyst AppSail) to keep its container within disk
+# limits. Use this file locally / in CI:  pip install -r requirements-train.txt
+-r requirements.txt
+-r requirements-chatbot.txt
+
+statsmodels==0.14.2          # temporal decomposition / trend baselines (analysis)
+mlflow>=3.0                  # experiment tracking (optional; pipeline degrades gracefully)
+xgboost>=2.0                 # gradient-boosting candidate w/ optional CUDA GPU (device="cuda")

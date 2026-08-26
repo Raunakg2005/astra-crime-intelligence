@@ -35,6 +35,7 @@ _ML_DIR = os.path.abspath(os.path.join(_HERE, "..", "ml"))   # referenced by /ap
 
 import analytics as A
 import db
+import firs as F
 
 app = FastAPI(
     title="KSP Crime Intelligence API",
@@ -42,16 +43,30 @@ app = FastAPI(
     description="Geospatial, network, predictive and anomaly analytics over the KSP FIR database.",
 )
 
-app.add_middleware(GZipMiddleware, minimum_size=1000)   # compress large GeoJSON responses
-# CORS: permissive "*" for local dev; in production set ASTRA_CORS_ORIGINS to the Catalyst
-# web-client origin(s) (comma-separated) to lock the API down to the dashboard only.
-_cors_origins = [o.strip() for o in os.getenv("ASTRA_CORS_ORIGINS", "*").split(",") if o.strip()] or ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Response gzip is OPT-IN. Behind the Catalyst AppSail gateway, app-level gzip is BROKEN:
+# the gateway forwards the compressed body but strips the `Content-Encoding: gzip` header,
+# so the browser tries to read gzip bytes as plain text and every response over the size
+# threshold fails with "Failed to fetch" on body read (small ones under the threshold pass,
+# which is why it looks intermittent). On Catalyst we therefore leave gzip OFF and let the
+# gateway negotiate compression. Set ASTRA_ENABLE_GZIP=1 for a standalone run (e.g. local,
+# no gateway) to shrink the large GeoJSON/incidents payloads.
+if os.getenv("ASTRA_ENABLE_GZIP", "").strip():
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+# CORS is OPT-IN. On Catalyst AppSail the API gateway already injects a permissive
+# `access-control-allow-origin: *` onto responses; if we ALSO add one here the response
+# carries two Access-Control-Allow-Origin headers, which every browser rejects
+# ("Failed to fetch") — so on Catalyst we leave ASTRA_CORS_ORIGINS unset and let the
+# gateway handle CORS. Set ASTRA_CORS_ORIGINS (comma-separated origins) only where no such
+# gateway sits in front of the app (e.g. local cross-origin dev without the Vite proxy).
+_cors_env = os.getenv("ASTRA_CORS_ORIGINS", "").strip()
+if _cors_env:
+    _cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.get("/health")
@@ -78,6 +93,76 @@ def get_incidents(
 ):
     """All FIRs as GeoJSON points (real coordinates) for native map clustering."""
     return A.incidents(district_id, crime_head, days)
+
+
+class FirCreateRequest(BaseModel):
+    district_id: int
+    police_station_id: int
+    crime_subhead_id: int
+    gravity_id: int
+    category_id: int | None = None
+    incident_from: str
+    incident_to: str | None = None
+    info_received: str | None = None
+    complainant_name: str
+    complainant_age: int | None = None
+    complainant_gender_id: int | None = None
+    brief_facts: str
+
+
+class FirStatusRequest(BaseModel):
+    status_id: int
+
+
+@app.get("/api/firs", tags=["firs"])
+def get_firs(
+    status_group: str | None = Query(None, pattern="^(open|closed)$"),
+    status_id: int | None = Query(None),
+    district_id: int | None = Query(None),
+    police_station_id: int | None = Query(None),
+    crime_head_id: int | None = Query(None),
+    crime_subhead_id: int | None = Query(None),
+    gravity_id: int | None = Query(None),
+    category_id: int | None = Query(None),
+    date_from: str | None = Query(None, description="registered on/after, YYYY-MM-DD"),
+    date_to: str | None = Query(None, description="registered on/before, YYYY-MM-DD"),
+    q: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
+    """Paginated FIR register — filter by status/district/station/crime taxonomy/gravity/
+    date range, free-text search over crime no / case no / district / police station."""
+    return F.list_firs(
+        status_group, status_id, district_id, police_station_id, crime_head_id,
+        crime_subhead_id, gravity_id, category_id, date_from, date_to, q, page, page_size,
+    )
+
+
+@app.get("/api/firs/lookups", tags=["firs"])
+def get_firs_lookups():
+    """Dropdown data (districts, police stations, crime taxonomy, statuses) for the
+    Add-FIR form and the register's filters."""
+    return F.lookups()
+
+
+@app.post("/api/firs", tags=["firs"])
+def post_fir(req: FirCreateRequest):
+    """Register a new FIR (status starts as 'Under Investigation')."""
+    try:
+        return F.create_fir(req.model_dump())
+    except (ValueError, KeyError) as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.patch("/api/firs/{case_master_id}/status", tags=["firs"])
+def patch_fir_status(case_master_id: int, req: FirStatusRequest):
+    """Close or reopen a FIR by setting its case status."""
+    try:
+        return F.update_status(case_master_id, req.status_id)
+    except KeyError as e:
+        raise HTTPException(404, str(e)) from e
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
 
 
 # ---- free-text place search (villages / areas / streets), not just districts ----
@@ -264,18 +349,72 @@ def nlp_clusters():
     return A.nlp_mo_clusters()
 
 
+import threading
+import time as _time
+
 _chatbot = None
+_chatbot_lock = threading.Lock()
+_chatbot_warm_secs = None      # how long construction took (seconds), for diagnostics
+_chatbot_error = None          # last construction error, for diagnostics
 
 
 def _get_chatbot():
-    """Lazily construct the chatbot so a missing/bad GROQ_API_KEY only breaks
-    /api/chat, not the whole analytics API."""
-    global _chatbot
+    """Construct the chatbot once, thread-safely. Importing LangChain/LangGraph and
+    building the agent is heavy (10s+ on a small container); doing it lazily inside the
+    first /api/chat request blew past AppSail's ~30s request limit, so the bot never
+    finished building and every request timed out. We now warm it at startup (see
+    _warm_chatbot) — this remains the single construction path, guarded by a lock so a
+    request that races the warm-up waits for the same instance instead of building a second."""
+    global _chatbot, _chatbot_warm_secs, _chatbot_error
     if _chatbot is None:
-        from chatbot.setup import ChatBot
+        with _chatbot_lock:
+            if _chatbot is None:
+                from chatbot.setup import ChatBot
 
-        _chatbot = ChatBot()
+                t0 = _time.time()
+                try:
+                    _chatbot = ChatBot()
+                    _chatbot_warm_secs = round(_time.time() - t0, 1)
+                except Exception as e:
+                    _chatbot_error = f"{type(e).__name__}: {e}"
+                    raise
     return _chatbot
+
+
+@app.on_event("startup")
+def _warm_chatbot():
+    """Kick off chatbot construction at container boot in a daemon thread, OFF the request
+    path, so the first user message doesn't pay the import/build cost. Non-blocking: uvicorn
+    binds the port immediately (container stays healthy) while this warms in the background."""
+    def _bg():
+        try:
+            _get_chatbot()
+            print(f"[warmup] chatbot ready in {_chatbot_warm_secs}s")
+        except Exception as e:            # e.g. missing/invalid GROQ_API_KEY — chat path reports it
+            print(f"[warmup] chatbot not ready: {e}")
+    threading.Thread(target=_bg, daemon=True).start()
+
+
+@app.get("/api/chat/diag", tags=["chat"])
+def chat_diag():
+    """Ops probe for the chatbot: is it warmed, how long did it take, and — critically — can
+    this container reach ITSELF at 127.0.0.1:$PORT (which is exactly what the bot's tools do)?"""
+    import urllib.request
+    port = os.environ.get("X_ZOHO_CATALYST_LISTEN_PORT", "9000")
+    out = {
+        "chatbot_warmed": _chatbot is not None,
+        "warm_secs": _chatbot_warm_secs,
+        "last_error": _chatbot_error,
+        "groq_key_set": bool(os.getenv("GROQ_API_KEY")),
+        "listen_port": port,
+    }
+    t0 = _time.time()
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=6) as r:
+            out["self_call"] = {"status": r.status, "secs": round(_time.time() - t0, 2)}
+    except Exception as e:
+        out["self_call"] = {"error": f"{type(e).__name__}: {e}", "secs": round(_time.time() - t0, 2)}
+    return out
 
 
 class ChatRequest(BaseModel):
@@ -301,12 +440,24 @@ def chat(req: ChatRequest) -> ChatResponse:
         raise HTTPException(503, f"Chatbot unavailable: {e}") from e
 
     thread_id = req.thread_id or str(uuid.uuid4())
-    result = bot.agent.invoke(
-        {"messages": [{"role": "user", "content": req.message}]},
-        config={"configurable": {"thread_id": thread_id}},
-    )
-    reply = result["messages"][-1].content
-    return ChatResponse(response=reply, thread_id=thread_id)
+    # Retry once on Groq's transient `tool_use_failed` (the LLM occasionally emits a
+    # malformed tool call — a fresh sample usually parses fine). Other errors (bad key,
+    # rate limit, outage) surface immediately as a clean 503 rather than a raw 500.
+    last_err = None
+    for attempt in range(2):
+        try:
+            result = bot.agent.invoke(
+                {"messages": [{"role": "user", "content": req.message}]},
+                config={"configurable": {"thread_id": thread_id}},
+            )
+            reply = result["messages"][-1].content
+            return ChatResponse(response=reply, thread_id=thread_id)
+        except Exception as e:
+            last_err = e
+            if "tool_use_failed" in str(e) and attempt == 0:
+                continue          # one clean retry
+            raise HTTPException(503, f"Chatbot unavailable: {e}") from e
+    raise HTTPException(503, f"Chatbot unavailable: {last_err}")
 
 
 @app.get("/", tags=["overview"])

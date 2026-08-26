@@ -5,6 +5,9 @@ import react from "@vitejs/plugin-react";
 // In production the SPA is served by Catalyst Web Client Hosting and talks to the
 // AppSail analytics service via the Catalyst API Gateway.
 export default defineConfig({
+  // Relative asset base: Catalyst Web Client Hosting serves the SPA under "/app/",
+  // so absolute "/assets/..." URLs would 404. "./" makes them resolve next to index.html.
+  base: "./",
   plugins: [react()],
   server: {
     port: 5173,

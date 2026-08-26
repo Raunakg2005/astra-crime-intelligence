@@ -1,0 +1,9 @@
+# AI copilot (chatbot/) dependencies — the LangChain/LangGraph + Groq stack.
+# Kept OUT of the serving requirements.txt because it does not fit alongside the scientific
+# stack on the Catalyst managed-runtime's default disk. Install locally to run the copilot:
+#   pip install -r requirements.txt -r requirements-chatbot.txt
+langchain==1.3.14
+langgraph==1.2.9
+langchain-groq==1.1.3
+python-dotenv==1.2.2
+requests==2.34.2             # tool calls into the analytics API

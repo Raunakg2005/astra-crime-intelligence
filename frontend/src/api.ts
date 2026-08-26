@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const http = axios.create({ baseURL: "" });
+// Empty base in local dev (Vite proxies /api → :8000). In production, build with
+// VITE_API_BASE=<Catalyst AppSail URL> so the hosted SPA reaches the API cross-origin.
+const http = axios.create({ baseURL: import.meta.env.VITE_API_BASE ?? "" });
 
 // ---- response types (mirror backend/appsail_ml/analytics.py) ----
 export interface Kpis {
@@ -249,6 +251,60 @@ export interface ChatResponse {
   thread_id: string;
 }
 
+// ---- FIR register ----
+export interface FirRow {
+  case_master_id: number;
+  crime_no: string;
+  case_no: string;
+  registered_date: string;
+  district_id: number;
+  district: string;
+  police_station: string;
+  crime_head: string;
+  crime_subhead: string;
+  gravity: string;
+  category: string;
+  status_id: number;
+  status: string;
+  status_group: "Open" | "Closed";
+  brief_facts: string;
+}
+export interface FirsResponse {
+  rows: FirRow[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface FirLookupItem {
+  id: number;
+  name: string;
+}
+export interface FirLookups {
+  districts: FirLookupItem[];
+  police_stations: { id: number; name: string; district_id: number }[];
+  crime_heads: FirLookupItem[];
+  crime_subheads: { id: number; head_id: number; name: string }[];
+  gravities: FirLookupItem[];
+  categories: FirLookupItem[];
+  statuses: { id: number; name: string; group: "Open" | "Closed" }[];
+}
+
+export interface FirCreatePayload {
+  district_id: number;
+  police_station_id: number;
+  crime_subhead_id: number;
+  gravity_id: number;
+  category_id?: number;
+  incident_from: string;
+  incident_to?: string;
+  info_received?: string;
+  complainant_name: string;
+  complainant_age?: number;
+  complainant_gender_id?: number;
+  brief_facts: string;
+}
+
 // ---- api calls ----
 export const api = {
   kpis: () => http.get<Kpis>("/api/kpis").then((r) => r.data),
@@ -281,6 +337,30 @@ export const api = {
     http.get<{ clusters: MoCluster[]; n_clusters: number }>("/api/nlp/clusters").then((r) => r.data),
   chat: (message: string, thread_id?: string) =>
     http.post<ChatResponse>("/api/chat", { message, thread_id }).then((r) => r.data),
+  firs: (p: {
+    status_group?: "open" | "closed";
+    status_id?: number;
+    district_id?: number;
+    police_station_id?: number;
+    crime_head_id?: number;
+    crime_subhead_id?: number;
+    gravity_id?: number;
+    category_id?: number;
+    date_from?: string;
+    date_to?: string;
+    q?: string;
+    page?: number;
+    page_size?: number;
+  } = {}) => http.get<FirsResponse>("/api/firs", { params: p }).then((r) => r.data),
+  firLookups: () => http.get<FirLookups>("/api/firs/lookups").then((r) => r.data),
+  createFir: (payload: FirCreatePayload) => http.post<FirRow>("/api/firs", payload).then((r) => r.data),
+  setFirStatus: (case_master_id: number, status_id: number) =>
+    http
+      .patch<{ case_master_id: number; status_id: number; status: string; status_group: "Open" | "Closed" }>(
+        `/api/firs/${case_master_id}/status`,
+        { status_id },
+      )
+      .then((r) => r.data),
 };
 
 // crime-head -> colour (consistent across views)

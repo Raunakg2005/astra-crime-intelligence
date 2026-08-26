@@ -8,14 +8,21 @@
       "source": ".",
       "name": "astra-backend",
       "ignore": [
-        ".git",
-        ".github",
-        ".venv",
-        "frontend",
-        "backend/tests",
-        "backend/ml",
-        "backend/appsail_ml/models/nlp_all",
-        "data/out/*.csv"
+        ".git/**",
+        ".github/**",
+        ".venv/**",
+        "venv/**",
+        "frontend/**",
+        "**/node_modules/**",
+        "**/__pycache__/**",
+        "**/*.pyc",
+        "backend/tests/**",
+        "backend/ml/**",
+        "backend/appsail_ml/models/nlp_all/**",
+        "data/out/*.csv",
+        "docs/**",
+        ".claude/**",
+        "*.bak"
       ]
     }
   ]

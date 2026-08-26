@@ -1,10 +1,9 @@
 {
-  "command": "uvicorn backend.appsail_ml.app:app --host 0.0.0.0 --port $X_ZOHO_CATALYST_LISTEN_PORT --workers 1",
-  "stack": "python3.11",
-  "memory": 1024,
+  "stack": "python_3_11",
   "build_path": ".",
+  "command": "sh -c '(echo PWD=$(pwd); id; df -h .; echo ===INSTALL===; python3 -m pip install --no-cache-dir --target \"$(pwd)/.deps\" -r requirements.txt) > diag.txt 2>&1 & python3 -m http.server ${X_ZOHO_CATALYST_LISTEN_PORT}'",
+  "memory": 1024,
   "env_variables": {
-    "PYTHONIOENCODING": "utf-8",
-    "GROQ_API_KEY": "YOUR_GROQ_API_KEY"
+    "PYTHONIOENCODING": "utf-8"
   }
 }
