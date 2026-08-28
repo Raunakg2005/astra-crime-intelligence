@@ -192,11 +192,11 @@ export default function Landing() {
           {/* Right Column: Floating Tactical Topo Map Frame */}
           <div className="lg:col-span-5 relative">
             <div className="animate-float">
-              {/* Dual Glow Layer */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/20 via-rose-500/25 to-sky-500/20 rounded-2xl blur-lg opacity-75" />
+              {/* Dual Glow Layer (Sky Blue only) */}
+              <div className="absolute -inset-1 bg-sky-500/15 rounded-2xl blur-lg opacity-75 pointer-events-none" />
 
               {/* Tactical Outer Container */}
-              <div className="relative border border-sky-500/40 bg-[#0b1329]/95 rounded-xl overflow-hidden shadow-xl shadow-sky-950/80">
+              <div className="relative border border-sky-500/40 bg-black rounded-xl overflow-hidden shadow-xl shadow-sky-950/80">
                 {/* 4 Corner Reticle Brackets */}
                 <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-sky-400 z-20 pointer-events-none" />
                 <div className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-sky-400 z-20 pointer-events-none" />
@@ -204,7 +204,7 @@ export default function Landing() {
                 <div className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-sky-400 z-20 pointer-events-none" />
 
                 {/* Header Strip */}
-                <div className="px-3.5 py-2 bg-[#070c1a] border-b border-sky-900/50 flex items-center justify-between z-10 relative">
+                <div className="px-3.5 py-2 bg-black border-b border-sky-900/50 flex items-center justify-between z-10 relative">
                   <div className="flex items-center gap-1.5 text-[11px] font-mono text-sky-300">
                     <Radio className="w-3 h-3 text-rose-400 animate-pulse" />
                     <span className="font-bold tracking-wider">LIVE INTEL FEED // KA-CRIME GRID</span>
@@ -215,16 +215,16 @@ export default function Landing() {
                 </div>
 
                 {/* Map Image Displayed from imported PNG Asset */}
-                <div className="relative bg-[#070b16] h-[360px] sm:h-[400px] w-full flex items-center justify-center p-1 overflow-hidden group cursor-pointer">
+                <div className="relative bg-black h-[360px] sm:h-[400px] w-full flex items-center justify-center p-1 overflow-hidden group cursor-pointer">
                   <img
                     src={heroKarnatakaMap}
                     alt="Karnataka Crime Grid Map"
-                    className="w-full h-full object-contain scale-[1.12] relative z-10 transition-transform duration-500 ease-out group-hover:scale-[1.35] drop-shadow-[0_0_30px_rgba(244,63,94,0.4)]"
+                    className="w-full h-full object-contain scale-[1.12] relative z-10 transition-transform duration-500 ease-out group-hover:scale-[1.35]"
                   />
                 </div>
 
                 {/* Footer System Status Bar */}
-                <div className="px-3.5 py-2 bg-[#070c1a] border-t border-sky-900/50 flex items-center justify-between text-[10px] font-mono">
+                <div className="px-3.5 py-2 bg-black border-t border-sky-900/50 flex items-center justify-between text-[10px] font-mono">
                   <div className="flex items-center gap-1.5 text-slate-300">
                     <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
                     <span className="font-semibold text-rose-400">SYS STATUS: ONLINE</span>
