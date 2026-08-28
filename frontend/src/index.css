@@ -8,12 +8,12 @@
 /* ---- theme tokens (RGB triplets consumed by tailwind.config.js) ---- */
 :root {                       /* DARK (default) */
   color-scheme: dark;
-  --ink-950: 7 11 20;
-  --ink-900: 11 17 32;
-  --ink-850: 15 23 41;
-  --ink-800: 19 28 48;
-  --ink-700: 28 39 64;
-  --ink-600: 41 54 84;
+  --ink-950: 6 9 19;          /* #060913 page background */
+  --ink-900: 9 13 22;         /* #090d16 sidebar background */
+  --ink-850: 12 18 32;        /* #0c1220 cards & panels */
+  --ink-800: 16 24 42;        /* #10182a active card surfaces */
+  --ink-700: 26 38 64;        /* #1a2640 card borders */
+  --ink-600: 38 54 86;        /* #263656 hover borders */
   --slate-100: 241 245 249;   /* strongest text (light on dark) */
   --slate-200: 226 232 240;
   --slate-300: 203 213 225;
@@ -22,10 +22,11 @@
   --slate-600: 71 85 105;     /* faint */
   --fg: 255 255 255;          /* headings */
   --glow-1: 56 189 248;
-  --glow-2: 167 139 250;
-  --glow-a: 0.08;
-  --glow-b: 0.06;
+  --glow-2: 14 165 233;
+  --glow-a: 0.12;
+  --glow-b: 0.08;
 }
+
 
 .light {                      /* LIGHT */
   color-scheme: light;
@@ -61,6 +62,20 @@ body {
     radial-gradient(1200px 600px at 15% -10%, rgb(var(--glow-1) / var(--glow-a)), transparent),
     radial-gradient(1000px 500px at 100% 0%, rgb(var(--glow-2) / var(--glow-b)), transparent);
 }
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
 
 /* scrollbars */
 ::-webkit-scrollbar {

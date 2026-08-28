@@ -14,15 +14,17 @@ import {
 import Logo from "./Logo";
 import { api } from "../api";
 import { useTheme } from "../theme";
-
-const NAV = [
-  { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
+const NAV: Array<{ to: string; label: string; icon: any; end?: boolean }> = [
+  { to: "/overview", label: "Overview", icon: LayoutDashboard },
   { to: "/geospatial", label: "Geospatial", icon: MapPinned },
   { to: "/network", label: "Link Analysis", icon: Share2 },
   { to: "/predictive", label: "Predictive AI", icon: Brain },
   { to: "/nlp", label: "NLP Text AI", icon: ScanText },
   { to: "/chat", label: "Assistant", icon: MessageCircle },
 ];
+
+
+
 
 declare global {
   interface Window {
