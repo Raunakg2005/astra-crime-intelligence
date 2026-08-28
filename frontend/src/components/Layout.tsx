@@ -17,7 +17,7 @@ import { api } from "../api";
 import { useTheme } from "../theme";
 
 const NAV = [
-  { to: "/", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/overview", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/geospatial", label: "Geospatial", icon: MapPinned },
   { to: "/network", label: "Link Analysis", icon: Share2 },
   { to: "/predictive", label: "Predictive AI", icon: Brain },

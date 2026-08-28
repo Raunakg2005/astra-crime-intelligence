@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import Landing from "./pages/Landing";
 import Overview from "./pages/Overview";
 import Geospatial from "./pages/Geospatial";
 import Network from "./pages/Network";
@@ -11,8 +12,9 @@ import Firs from "./pages/Firs";
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route element={<Layout />}>
-        <Route index element={<Overview />} />
+        <Route path="/overview" element={<Overview />} />
         <Route path="/geospatial" element={<Geospatial />} />
         <Route path="/network" element={<Network />} />
         <Route path="/predictive" element={<Predictive />} />
@@ -24,3 +26,4 @@ export default function App() {
     </Routes>
   );
 }
+
