@@ -14,13 +14,12 @@ import {
   Building2,
   Phone,
   Mail,
-  Send,
-  Copy,
-  Check,
   X,
   Sparkles,
   ExternalLink,
   ArrowUpRight,
+  Globe,
+  Printer,
 } from "lucide-react";
 import Logo from "../components/Logo";
 import heroKarnatakaMap from "../assets/hero_karnataka_map.png";
@@ -31,34 +30,10 @@ export default function Landing() {
   const [loginEmail, setLoginEmail] = useState("inspector.rao@ksp.gov.in");
   const [loginPasscode, setLoginPasscode] = useState("ksp2026demo");
 
-  // Contact Desk Form State
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    district: "",
-    badgeNo: "",
-    priority: "Standard",
-    message: "",
-  });
-  const [contactSubmitted, setContactSubmitted] = useState<string | null>(null);
-  const [copiedRef, setCopiedRef] = useState(false);
-
+  // Contact Desk Form State removed
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     navigate("/overview");
-  };
-
-  const handleContactSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const randomRef = `KSP-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
-    setContactSubmitted(randomRef);
-  };
-
-  const copyRefToClipboard = (refCode: string) => {
-    navigator.clipboard.writeText(refCode);
-    setCopiedRef(true);
-    setTimeout(() => setCopiedRef(false), 2000);
   };
 
   return (
@@ -80,9 +55,6 @@ export default function Landing() {
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold tracking-wider text-base text-white font-mono">
                   ASTRA
-                </span>
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                  SCRB KA
                 </span>
               </div>
               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-medium leading-none">
@@ -135,21 +107,25 @@ export default function Landing() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Left Column: Headline & Controls */}
           <div className="lg:col-span-7 space-y-6">
-            {/* Classified System Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-950/60 border border-rose-500/40 text-rose-400 text-[11px] font-mono tracking-wider">
-              <Radio className="w-3 h-3 animate-pulse text-rose-400" />
-              <span>CLASSIFIED SYSTEM // LAW ENFORCEMENT INTELLIGENCE</span>
+            {/* Prominent Shiny Metallic Gold Kannada Motto Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-950/90 via-yellow-900/60 to-amber-950/90 border border-yellow-400/70 shadow-[0_0_20px_rgba(245,158,11,0.35)] text-sm sm:text-base font-extrabold tracking-wide relative overflow-hidden backdrop-blur-md">
+              {/* Shimmer Light Sweep Effect */}
+              <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent skew-x-12 animate-gold-shimmer pointer-events-none" />
+              <Shield className="w-4 h-4 text-yellow-400 shrink-0 filter drop-shadow-[0_0_6px_rgba(250,204,21,0.9)]" />
+              <span className="bg-gradient-to-r from-yellow-200 via-amber-300 to-yellow-100 bg-clip-text text-transparent font-extrabold tracking-wide drop-shadow-sm">
+                ನಿಖರ ವಿಶ್ಲೇಷಣೆ • ತಡೆರಹಿತ ಸುರಕ್ಷತೆ
+              </span>
             </div>
 
             {/* Headline (Compact & Elegant) */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-[1.15]">
                 <span className="text-white block">INTELLIGENCE.</span>
                 <span className="bg-gradient-to-r from-sky-400 via-sky-300 to-rose-400 bg-clip-text text-transparent block">
                   PRECISION. ACTION.
                 </span>
               </h1>
-              <div className="h-1 w-16 bg-gradient-to-r from-sky-400 to-rose-500 rounded-full mt-2" />
+              <div className="h-1 w-20 bg-gradient-to-r from-sky-400 to-rose-500 rounded-full mt-2" />
             </div>
 
             {/* Subtitle (Smaller font size) */}
@@ -157,7 +133,7 @@ export default function Landing() {
               Astra transforms Karnataka State Police's{" "}
               <span className="text-sky-300 font-semibold">40,000+ FIR database</span> into
               actionable spatiotemporal hotspots, co-offending syndicate graphs, and predictive
-              crime risk scores — deployed 100% on Zoho Catalyst.
+              crime risk scores
             </p>
 
             {/* Primary Action Button (Compact Size) */}
@@ -419,111 +395,119 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* CONTACT DESK (MATCHING USER SCREENSHOT EXACTLY) */}
+      {/* CONTACT DESK (OFFICIAL GOVERNMENT CONTACT) */}
       {/* ------------------------------------------------------------- */}
       <section id="contact" className="py-12 bg-[#060a16] border-t border-slate-800/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column: SCRB Contact Info Cards */}
-            <div className="lg:col-span-5 space-y-3">
-              <div className="flex items-start gap-3.5 p-4 rounded-xl bg-[#090e1d] border border-slate-800/90 shadow-sm">
-                <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 shrink-0">
-                  <Building2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-200">
-                    SCRB HEADQUARTERS
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                    Karnataka State Police Headquarters, Nrupatunga Road, Bengaluru - 560001
-                  </p>
-                </div>
+          {/* Card Container - Sleek & Professional */}
+          <div className="bg-[#090f20]/90 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-6">
+            {/* Top Pill Badge */}
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-amber-500/30 text-slate-200 text-xs font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span>Official Government Contact</span>
+              </span>
+            </div>
+
+            {/* Header Block: Left Emblem Seal + Title & Subtitle */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {/* Karnataka Police Emblem / Shield Box */}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-amber-950/25 border border-amber-500/40 flex flex-col items-center justify-center text-center shrink-0 shadow-sm p-2">
+                <Shield className="w-6 h-6 text-amber-400" />
+                <span className="text-[7px] font-mono font-bold uppercase text-amber-300/90 tracking-tighter mt-0.5">KSP HQ</span>
               </div>
 
-              <div className="flex items-start gap-3.5 p-4 rounded-xl bg-[#090e1d] border border-slate-800/90 shadow-sm">
-                <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
-                  <Phone className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-200">
-                    CONTROL ROOM & EMERGENCY
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                    Helpline: 112 / SCRB Office: +91 (080) 2294-2100
-                  </p>
-                </div>
+              {/* Title & Subtitle */}
+              <div className="space-y-0.5">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-white tracking-wide leading-snug">
+                  Director-General & Inspector General of Police, Karnataka State
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 font-medium">
+                  Karnataka State Police Headquarters
+                </p>
               </div>
+            </div>
 
-              <div className="flex items-start gap-3.5 p-4 rounded-xl bg-[#090e1d] border border-slate-800/90 shadow-sm">
-                <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 shrink-0">
+            {/* Contact Details Items Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-5 border-t border-slate-800/80">
+              {/* EMAIL */}
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-sky-400 shrink-0">
                   <Mail className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-200">
-                    OFFICIAL EMAIL
-                  </h4>
-                  <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                    scrb@ksp.gov.in · astra-intel@ksp.gov.in
-                  </p>
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                    EMAIL
+                  </div>
+                  <a
+                    href="mailto:police@ksp.gov.in"
+                    className="text-xs sm:text-sm font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-colors font-mono"
+                  >
+                    police@ksp.gov.in
+                  </a>
+                </div>
+              </div>
+
+              {/* PHONE */}
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-sky-400 shrink-0">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                    PHONE
+                  </div>
+                  <div className="text-xs sm:text-sm font-semibold text-slate-200 font-mono leading-tight">
+                    080-22942111<br />
+                    080-22942777
+                  </div>
+                </div>
+              </div>
+
+              {/* FAX */}
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-sky-400 shrink-0">
+                  <Printer className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                    FAX
+                  </div>
+                  <div className="text-xs sm:text-sm font-semibold text-slate-200 font-mono">
+                    080-22215911
+                  </div>
+                </div>
+              </div>
+
+              {/* WEBSITE */}
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/80 text-sky-400 shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                    WEBSITE
+                  </div>
+                  <a
+                    href="https://ksp.karnataka.gov.in"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs sm:text-sm font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-colors font-mono"
+                  >
+                    ksp.karnataka.gov.in
+                  </a>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Transmission Form */}
-            <div className="lg:col-span-7 bg-[#090e1d] border border-slate-800/90 rounded-xl p-5 flex flex-col justify-between">
-              {contactSubmitted ? (
-                <div className="p-6 rounded-lg bg-emerald-950/50 border border-emerald-500/40 text-center space-y-3 my-auto">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <h4 className="text-base font-bold text-white">Transmission Dispatched</h4>
-                  <p className="text-xs text-slate-300">
-                    Official tracking reference assigned to your query:
-                  </p>
-                  <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-emerald-500/50 font-mono text-emerald-300 font-bold text-xs">
-                    <span>#{contactSubmitted}</span>
-                    <button
-                      onClick={() => copyRefToClipboard(contactSubmitted)}
-                      className="p-0.5 hover:text-white transition-colors"
-                    >
-                      {copiedRef ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => setContactSubmitted(null)}
-                      className="text-[11px] text-slate-400 underline hover:text-white mt-1"
-                    >
-                      Submit another inquiry
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleContactSubmit} className="space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <label className="block text-[11px] font-mono font-bold tracking-wider text-slate-300 uppercase">
-                      MESSAGE / REQUIREMENTS *
-                    </label>
-                    <textarea
-                      rows={4}
-                      required
-                      placeholder="Detail your request or analytical query..."
-                      value={contactForm.message}
-                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                      className="w-full p-3 rounded-lg bg-[#050811] border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 resize-none font-sans"
-                    />
-                  </div>
-
-                  {/* Submit Official Transmission Button (Compact) */}
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-lg text-xs font-mono font-bold tracking-widest text-white bg-[#0088cc] hover:bg-[#0077bb] shadow-md shadow-sky-600/30 flex items-center justify-center gap-2 transition-all border border-sky-300/30 uppercase"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>SUBMIT OFFICIAL TRANSMISSION</span>
-                  </button>
-                </form>
-              )}
+            {/* Address Row at Bottom */}
+            <div className="pt-4 border-t border-slate-800/80 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/80 text-sky-400 shrink-0">
+                <MapPin className="w-4 h-4" />
+              </div>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                No.2, Nrupathunga Road, Bangalore – 560 001, Karnataka, India
+              </p>
             </div>
           </div>
         </div>
