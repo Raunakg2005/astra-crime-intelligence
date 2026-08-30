@@ -14,8 +14,15 @@ const KA_BOUNDS: [number, number, number, number] = [73.6, 11.4, 78.7, 18.6];
 //  * DARK  → CARTO "dark_all": dark-themed with town/district labels (free dark tiles are
 //    sparser at village level; a keyed provider like MapTiler gives a dense dark map).
 // Incident layers render on top. No glyphs — cluster counts are DOM labels.
+const CARTO_KEY =
+  (import.meta as any).env?.VITE_CARTO_API_KEY ||
+  "eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfMzk3OXMybW4iLCJqdGkiOiJlZWYxMjExMSIsImV4cCI6MTgxOTYxMDIyMH0.39ViUnqw4k0ZxP9V9gT06gDx-sE3znYrltw1pUq-Oyk";
+
 const CARTO = (style: string) =>
-  ["a", "b", "c"].map((s) => `https://${s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}.png`);
+  ["a", "b", "c"].map(
+    (s) =>
+      `https://${s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}.png${CARTO_KEY ? `?api_key=${CARTO_KEY}` : ""}`
+  );
 const OSM = ["a", "b", "c"].map((s) => `https://${s}.tile.openstreetmap.org/{z}/{x}/{y}.png`);
 const mapStyle = (theme: "dark" | "light"): maplibregl.StyleSpecification => ({
   version: 8,
