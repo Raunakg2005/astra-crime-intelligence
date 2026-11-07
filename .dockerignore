@@ -25,3 +25,10 @@ client
 diag.txt
 pip_log.txt
 import_check.txt
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example

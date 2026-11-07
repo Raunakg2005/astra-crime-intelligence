@@ -20,11 +20,12 @@ from sklearn.preprocessing import StandardScaler
 
 from config import RANDOM_SEED
 
+from model_capabilities import HAS_XGB, HAS_GPU, XGB_DEVICE
+
 try:
     from xgboost import XGBClassifier, XGBRegressor
-    HAS_XGB = True
-except Exception:  # pragma: no cover
-    HAS_XGB = False
+except Exception:
+    pass
 
 
 def _gpu_available() -> bool:

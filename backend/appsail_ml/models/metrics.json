@@ -19,25 +19,25 @@
       "rmse": 3.4857
     },
     "champion_versions": {
-      "classifier": 3,
-      "regressor": 3
+      "classifier": 4,
+      "regressor": 4
     }
   },
   "anomaly": {
     "n_cases": 40000,
     "flagged": 400,
     "n_planted": 160,
-    "roc_auc": 0.9807,
-    "avg_precision": 0.5651,
-    "recall_at_contamination": 0.6625,
-    "precision_at_k": 0.5188
+    "roc_auc": 0.9819,
+    "avg_precision": 0.5678,
+    "recall_at_contamination": 0.6813,
+    "precision_at_k": 0.525
   },
   "data_rows": 40000,
   "data_fingerprint": "d9c60dedd4f21558",
   "families": {
     "classifier": {
       "task": "risk_classifier",
-      "version": 3,
+      "version": 4,
       "promoted": false,
       "challenger_metric": 0.699,
       "champion_metric": 0.699,
@@ -45,7 +45,7 @@
     },
     "regressor": {
       "task": "risk_regressor",
-      "version": 3,
+      "version": 4,
       "promoted": false,
       "challenger_metric": 2.4955,
       "champion_metric": 2.4955,

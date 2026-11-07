@@ -1,0 +1,40 @@
+
+services:
+  backend:
+    image: astra-backend:1.0
+    container_name: astra-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - astra-db-data:/app/data/out
+    networks:
+      - astra-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    image: astra-frontend:1.0
+    container_name: astra-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - astra-network
+    restart: unless-stopped
+
+networks:
+  astra-network:
+    driver: bridge
+
+volumes:
+  astra-db-data:
+    external: true
