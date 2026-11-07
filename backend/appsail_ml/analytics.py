@@ -41,7 +41,7 @@ def _ml_features():
 def _nlp():
     """Load the NLP champion pipeline + MO clusterer + text helpers (from ml/)."""
     import joblib
-    import nlp as mlnlp  # ml/nlp.py -> clean_text, extract_entities
+    import nlp_inference as mlnlp  # ml/nlp.py -> clean_text, extract_entities
     clf_path = os.path.join(MODELS_DIR, "nlp_classifier.joblib")
     cl_path = os.path.join(MODELS_DIR, "nlp_mo_clusters.joblib")
     art = joblib.load(clf_path) if os.path.exists(clf_path) else None

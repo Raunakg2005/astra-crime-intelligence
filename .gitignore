@@ -89,3 +89,5 @@ Desktop.ini
 
 # Claude Code / editor tooling (kept out of the repo)
 .claude/
+
+astra-images.tar

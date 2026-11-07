@@ -1,0 +1,223 @@
+{
+  "family": "mlp",
+  "metrics": {
+    "accuracy": 0.8628,
+    "macro_f1": 0.8814,
+    "weighted_f1": 0.8665,
+    "cv_macro_f1": 0.8789,
+    "n_classes": 8
+  },
+  "cv": {
+    "n_splits": 3,
+    "n_candidates": 17,
+    "metric": "f1_macro",
+    "mean": 0.8789,
+    "std": 0.002,
+    "leaderboard": [
+      {
+        "family": "mlp",
+        "cv_score": 0.8789,
+        "cv_std": 0.002,
+        "accuracy": 0.8628,
+        "macro_f1": 0.8814,
+        "weighted_f1": 0.8665,
+        "has_proba": true
+      },
+      {
+        "family": "ridge",
+        "cv_score": 0.8707,
+        "cv_std": 0.0006,
+        "accuracy": 0.8608,
+        "macro_f1": 0.8777,
+        "weighted_f1": 0.8634,
+        "has_proba": false
+      },
+      {
+        "family": "nearest_centroid",
+        "cv_score": 0.8757,
+        "cv_std": 0.0018,
+        "accuracy": 0.8541,
+        "macro_f1": 0.8763,
+        "weighted_f1": 0.8588,
+        "has_proba": true
+      },
+      {
+        "family": "decision_tree",
+        "cv_score": 0.863,
+        "cv_std": 0.0108,
+        "accuracy": 0.8595,
+        "macro_f1": 0.8738,
+        "weighted_f1": 0.862,
+        "has_proba": true
+      },
+      {
+        "family": "multinomial_nb",
+        "cv_score": 0.8711,
+        "cv_std": 0.0021,
+        "accuracy": 0.8555,
+        "macro_f1": 0.8735,
+        "weighted_f1": 0.8579,
+        "has_proba": true
+      },
+      {
+        "family": "logreg",
+        "cv_score": 0.8689,
+        "cv_std": 0.0012,
+        "accuracy": 0.8574,
+        "macro_f1": 0.8726,
+        "weighted_f1": 0.8591,
+        "has_proba": true
+      },
+      {
+        "family": "sgd_logloss",
+        "cv_score": 0.865,
+        "cv_std": 0.002,
+        "accuracy": 0.8549,
+        "macro_f1": 0.8681,
+        "weighted_f1": 0.8562,
+        "has_proba": true
+      },
+      {
+        "family": "linear_svc",
+        "cv_score": 0.8607,
+        "cv_std": 0.0017,
+        "accuracy": 0.8539,
+        "macro_f1": 0.8665,
+        "weighted_f1": 0.8548,
+        "has_proba": false
+      },
+      {
+        "family": "bernoulli_nb",
+        "cv_score": 0.8551,
+        "cv_std": 0.0007,
+        "accuracy": 0.8313,
+        "macro_f1": 0.8591,
+        "weighted_f1": 0.8505,
+        "has_proba": true
+      },
+      {
+        "family": "complement_nb",
+        "cv_score": 0.8525,
+        "cv_std": 0.0016,
+        "accuracy": 0.8324,
+        "macro_f1": 0.8545,
+        "weighted_f1": 0.8443,
+        "has_proba": true
+      },
+      {
+        "family": "knn",
+        "cv_score": 0.8427,
+        "cv_std": 0.0026,
+        "accuracy": 0.8455,
+        "macro_f1": 0.849,
+        "weighted_f1": 0.8455,
+        "has_proba": true
+      },
+      {
+        "family": "hist_gbm",
+        "cv_score": 0.8416,
+        "cv_std": 0.0024,
+        "accuracy": 0.8469,
+        "macro_f1": 0.8488,
+        "weighted_f1": 0.8472,
+        "has_proba": true
+      },
+      {
+        "family": "extra_trees",
+        "cv_score": 0.844,
+        "cv_std": 0.0044,
+        "accuracy": 0.8441,
+        "macro_f1": 0.8471,
+        "weighted_f1": 0.8444,
+        "has_proba": true
+      },
+      {
+        "family": "random_forest",
+        "cv_score": 0.8431,
+        "cv_std": 0.0056,
+        "accuracy": 0.8421,
+        "macro_f1": 0.844,
+        "weighted_f1": 0.842,
+        "has_proba": true
+      },
+      {
+        "family": "bagging",
+        "cv_score": 0.8396,
+        "cv_std": 0.0045,
+        "accuracy": 0.8426,
+        "macro_f1": 0.8428,
+        "weighted_f1": 0.8424,
+        "has_proba": true
+      },
+      {
+        "family": "adaboost",
+        "cv_score": 0.7896,
+        "cv_std": 0.0086,
+        "accuracy": 0.8325,
+        "macro_f1": 0.8426,
+        "weighted_f1": 0.8335,
+        "has_proba": true
+      },
+      {
+        "family": "passive_aggressive",
+        "cv_score": 0.8388,
+        "cv_std": 0.0033,
+        "accuracy": 0.832,
+        "macro_f1": 0.8275,
+        "weighted_f1": 0.8341,
+        "has_proba": false
+      }
+    ]
+  },
+  "data": {
+    "n_cases": 40000,
+    "n_districts": 31,
+    "date_from": "2022-07-01",
+    "date_to": "2026-06-30",
+    "span_days": 1460,
+    "warnings": [],
+    "data_fingerprint": "d9c60dedd4f21558"
+  },
+  "per_class": {
+    "Crimes Against Body": {
+      "f1-score": 0.891
+    },
+    "Crimes Against Children": {
+      "f1-score": 0.91
+    },
+    "Crimes Against Property": {
+      "f1-score": 0.827
+    },
+    "Crimes Against Public Order & Safety": {
+      "f1-score": 0.895
+    },
+    "Crimes Against Women": {
+      "f1-score": 0.867
+    },
+    "Cyber Crimes": {
+      "f1-score": 0.886
+    },
+    "Economic Offences": {
+      "f1-score": 0.878
+    },
+    "Offences Against State / Special Laws": {
+      "f1-score": 0.897
+    }
+  },
+  "classes": [
+    "Crimes Against Body",
+    "Crimes Against Children",
+    "Crimes Against Property",
+    "Crimes Against Public Order & Safety",
+    "Crimes Against Women",
+    "Cyber Crimes",
+    "Economic Offences",
+    "Offences Against State / Special Laws"
+  ],
+  "n_train": 32000,
+  "n_holdout": 8000,
+  "task": "nlp_crime_classifier",
+  "version": 3,
+  "registered_at": "2026-11-07T06:08:25.750410+00:00",
+  "primary_metric": "macro_f1"
+}

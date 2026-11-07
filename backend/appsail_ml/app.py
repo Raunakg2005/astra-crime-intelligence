@@ -289,9 +289,9 @@ def get_model_registry():
     reg_dir = os.path.join(_ML_DIR, "registry")
     out = {"tasks": {}, "pipeline": {}}
     try:
-        import models as ml_models  # ml/models.py -> capability flags
-        out["pipeline"] = {"xgboost": ml_models.HAS_XGB, "gpu": ml_models.HAS_GPU,
-                           "device": ml_models.XGB_DEVICE}
+        import model_capabilities as capabilities # ml/models.py -> capability flags
+        out["pipeline"] = {"xgboost": capabilities.HAS_XGB, "gpu": capabilities.HAS_GPU,
+                           "device": capabilities.XGB_DEVICE}
     except Exception:
         pass
     try:

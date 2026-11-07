@@ -1,16 +1,16 @@
 {
-  "version": 1,
+  "version": 3,
   "metrics": {
     "n_cases": 40000,
     "flagged": 400,
     "flagged_pct": 1.0,
     "n_planted": 160,
-    "roc_auc": 0.9807,
-    "avg_precision": 0.5651,
-    "recall_at_contamination": 0.6625,
-    "precision_at_contamination": 0.265,
-    "precision_at_k": 0.5188
+    "roc_auc": 0.9819,
+    "avg_precision": 0.5678,
+    "recall_at_contamination": 0.6813,
+    "precision_at_contamination": 0.2725,
+    "precision_at_k": 0.525
   },
-  "promoted_at": "2026-07-12T09:20:44.421353+00:00",
+  "promoted_at": "2026-11-07T05:59:25.062896+00:00",
   "primary_metric": "roc_auc"
 }
