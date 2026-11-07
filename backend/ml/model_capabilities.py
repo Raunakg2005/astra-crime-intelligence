@@ -19,8 +19,8 @@ def _gpu_available() -> bool:
 
 
 try:
-    import xgboost
-    HAS_XGB = True
+    import importlib.util
+    HAS_XGB = importlib.util.find_spec("xgboost") is not None
 except Exception:
     HAS_XGB = False
 

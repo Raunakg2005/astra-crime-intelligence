@@ -40,8 +40,7 @@ def _gpu_available() -> bool:
         return False
 
 
-HAS_GPU = _gpu_available()
-XGB_DEVICE = "cuda" if HAS_GPU else "cpu"
+
 
 
 def search_n_jobs(name: str) -> int:
